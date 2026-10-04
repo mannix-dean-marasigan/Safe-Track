@@ -1,0 +1,1943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SafeTrack — Personal Safety Network</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+:root{--bg:#050c12;--panel:#091721;--panel2:#0d1d28;--line:#17313d;--text:#f3f8fa;--muted:#8197a4;--green:#35dfb1;--blue:#46a7ff;--red:#ff4e68;--amber:#ffc857;--shadow:0 20px 60px rgba(0,0,0,.28)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 70% -20%,#143849 0,#07121a 35%,#04090d 75%);color:var(--text);font-family:"DM Sans",sans-serif}button,input{font:inherit}
+.app{min-height:100vh}.sidebar{position:fixed;z-index:20;inset:0 auto 0 0;width:250px;padding:22px 14px;background:rgba(4,12,18,.94);border-right:1px solid var(--line);backdrop-filter:blur(18px)}
+.brand{display:flex;align-items:center;gap:10px;padding:0 10px 28px;font-family:"Space Grotesk";font-weight:700;font-size:18px}.brandmark{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,var(--green),#2a92e8);color:#021017;font-weight:900;box-shadow:0 0 25px #35dfb12b}
+.nav{display:grid;gap:5px}.nav button{border:0;background:transparent;color:#7e94a0;padding:12px;border-radius:11px;text-align:left;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:12px}.nav button:hover,.nav button.active{background:#0d2633;color:var(--green)}.nav button.active{box-shadow:inset 3px 0 var(--green)}
+.profile{position:absolute;bottom:18px;left:14px;right:14px;border:1px solid var(--line);border-radius:14px;padding:11px;display:flex;gap:10px;align-items:center;background:#08151e}.avatar{width:35px;height:35px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#b1f1df,#367c9e);color:#06202a;font-weight:800}.muted{color:var(--muted);font-size:11px}
+main{margin-left:250px;padding:28px;max-width:1550px}.page{display:none}.page.active{display:block}.top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:20px}.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--green);font-weight:700}.title{font-family:"Space Grotesk";font-size:29px;font-weight:700;margin-top:4px}.actions{display:flex;gap:9px;align-items:center}
+.card{background:linear-gradient(145deg,rgba(12,29,40,.97),rgba(6,16,23,.97));border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);overflow:hidden}.head{padding:16px 18px;border-bottom:1px solid #15303c;display:flex;justify-content:space-between;align-items:center}.head h3{font-size:14px;margin:0}.pad{padding:18px}.btn{border:1px solid #2b4d5b;background:#0b202b;color:#d9e8ee;border-radius:10px;padding:9px 13px;cursor:pointer;font-weight:700;font-size:12px;transition:.2s}.btn:hover{transform:translateY(-1px);background:#103040}.primary{border:0;background:linear-gradient(135deg,var(--green),#2d9fd5);color:#031016}.danger{border:0;background:linear-gradient(135deg,#ff536c,#d52649);color:white}.pill{border:1px solid #234351;background:#091b25;padding:8px 11px;border-radius:999px;font-size:11px;color:#9fb1ba}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green);margin-right:6px}
+.dashboard-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,.8fr);gap:16px}.map-card{height:505px;position:relative}.map{height:100%;background:#102027}.leaflet-container{background:#09151c;font:11px "DM Sans",sans-serif}.leaflet-control-zoom a{background:#091923!important;color:white!important;border-color:#284652!important}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#091923;color:white;border:1px solid #294957}.leaflet-popup-content{margin:10px}.leaflet-popup-close-button{color:#9eb2bd!important}
+.map-overlay{position:absolute;z-index:500;left:16px;top:16px;display:flex;gap:8px;flex-wrap:wrap}.map-status{background:#07141ddd;border:1px solid #264653;border-radius:10px;padding:9px 11px;font-size:11px;backdrop-filter:blur(8px)}.map-status strong{color:var(--green)}.map-bottom{position:absolute;z-index:500;left:16px;right:16px;bottom:16px;display:flex;justify-content:space-between;gap:12px;align-items:end}.route-card{background:#07141de8;border:1px solid #284653;border-radius:12px;padding:12px;min-width:260px;backdrop-filter:blur(8px)}.route-card b{font-size:12px}.route-card p{margin:5px 0 0;color:#90a5af;font-size:11px}
+.side{display:grid;gap:16px}.status{padding:18px}.status-line{display:flex;justify-content:space-between;align-items:center}.big{font:700 25px "Space Grotesk";margin-top:4px}.good{color:var(--green)}.progress{height:7px;background:#10242e;border-radius:10px;margin:15px 0 12px;overflow:hidden}.progress i{display:block;height:100%;width:84%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:10px}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric{padding:11px;border:1px solid #193541;border-radius:10px;background:#081720}.metric b{display:block;font-size:16px}.metric span{font-size:10px;color:var(--muted)}
+.activity{padding:0 16px 12px}.event{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid #142b36}.event:last-child{border:0}.icon{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#102a35}.icon.red{background:#32151d;color:#ff6679}.icon.green{background:#0b3028;color:#40dfb5}.event b{font-size:11px}.event p{font-size:10px;color:var(--muted);margin:3px 0}.event time{font-size:9px;color:#617984}
+.lower{display:grid;grid-template-columns:1.05fr 1fr 1fr;gap:16px;margin-top:16px}.contact-list{display:grid;gap:8px;margin-top:14px}.contact{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#081720;border:1px solid #17333e;border-radius:10px}.contact-left{display:flex;gap:9px;align-items:center}.mini{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#244452;font-size:11px;font-weight:700}.online{width:7px;height:7px;background:var(--green);border-radius:50%}.nfc-wrap{display:flex;gap:14px;align-items:center;margin-top:14px}.nfc-card{width:75px;height:102px;border-radius:10px;border:1px solid var(--green);display:grid;place-items:center;background:radial-gradient(circle at 70% 25%,#184b49,#07141b);font-size:27px;box-shadow:0 0 25px #35dfb122}.riskbar{height:9px;border-radius:20px;background:linear-gradient(90deg,#36d69d 0 34%,#ffc857 34% 67%,#ff596d 67%)}.scale{display:flex;justify-content:space-between;font-size:9px;color:#738993;margin-top:7px}
+.section-grid{display:grid;grid-template-columns:1.35fr .8fr;gap:16px}.wide-map{height:620px}.panel{padding:20px}.panel h2{font:700 18px "Space Grotesk";margin:0 0 5px}.panel p{line-height:1.7;color:#8ca1ab;font-size:12px}.option{border:1px solid #193742;background:#081720;border-radius:12px;padding:13px;margin-top:10px}.option.active{border-color:#2f927c;box-shadow:inset 3px 0 var(--green)}.option-row{display:flex;justify-content:space-between;gap:10px}.safe{color:var(--green)}.warn{color:var(--amber)}.danger-t{color:var(--red)}
+.sos-panel{display:grid;grid-template-columns:1fr 1fr;gap:16px}.sos-state{padding:26px;text-align:center}.sos-active{border-color:#632532;background:radial-gradient(circle at 50% 0,#32141d,#091721 45%)}.sos-symbol{width:78px;height:78px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;background:#35151e;color:#ff6378;border:1px solid #ff4d67;box-shadow:0 0 40px #ff4d6722;font-size:32px}.data-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #15303a;font-size:11px}.data-row span{color:var(--muted)}
+.network{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.person{border:1px solid #193642;background:#081720;border-radius:12px;padding:14px;text-align:center}.person .mini{margin:auto}.person b{display:block;font-size:11px;margin-top:7px}.person small{color:var(--muted);font-size:9px}.check{color:var(--green);font-size:10px;margin-top:7px}
+.nfc-page{display:grid;grid-template-columns:.75fr 1.25fr;gap:16px}.hero-card{min-height:530px;display:grid;place-items:center;padding:30px}.big-nfc{width:210px;height:290px;border-radius:25px;border:1px solid #43e4bf;background:radial-gradient(circle at 70% 20%,#1b5651,#0b1b22 50%,#061017);box-shadow:0 0 70px #35dfb122,0 30px 70px #0008;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:13px;transform:rotate(-4deg)}.big-nfc .symbol{font-size:58px}.big-nfc strong{font:700 18px "Space Grotesk";letter-spacing:.08em}.big-nfc small{color:#7eaaa2}.steps{display:grid;gap:10px;margin-top:18px}.step{display:flex;gap:12px;padding:13px;border:1px solid #183540;border-radius:11px;background:#081720}.step-num{width:25px;height:25px;border-radius:8px;background:#12343e;color:var(--green);display:grid;place-items:center;font-size:11px;font-weight:800}.step b{font-size:11px}.step p{margin:3px 0 0;font-size:10px;color:var(--muted)}
+.auth-card{max-width:1000px;margin:auto;display:grid;grid-template-columns:1fr 1fr;min-height:570px}.auth-art{padding:38px;background:radial-gradient(circle at 70% 30%,#194a53,transparent 45%),linear-gradient(145deg,#0d2632,#07131a);display:flex;flex-direction:column;justify-content:flex-end}.auth-art h2{font:700 33px "Space Grotesk";margin:0}.auth-art p{color:#8ca2ad;line-height:1.6;font-size:12px}.auth-form{padding:38px}.auth-form h2{font:700 24px "Space Grotesk";margin:0}.field{margin-top:16px}.field label{font-size:10px;color:#8ea4ae}.field input{width:100%;margin-top:6px;padding:12px;border:1px solid #21404d;background:#07151e;border-radius:9px;color:white;outline:none}.field input:focus{border-color:#39dfb0}.full{width:100%;margin-top:18px}.note{font-size:9px;color:#687e88;line-height:1.6;margin-top:14px}
+.toast{position:fixed;right:22px;top:20px;z-index:1000;background:#0b202b;border:1px solid #2b5261;border-radius:11px;padding:12px 15px;font-size:11px;opacity:0;transform:translateY(-10px);transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:none}
+.modal{position:fixed;inset:0;z-index:900;background:#02070bcc;backdrop-filter:blur(10px);display:none;place-items:center}.modal.show{display:grid}.modal-box{width:min(470px,calc(100% - 28px));padding:27px;border:1px solid #5b2734;background:#0a1720;border-radius:20px;box-shadow:0 30px 100px #000}.ring{width:75px;height:75px;border-radius:50%;margin:auto;display:grid;place-items:center;background:#36151f;color:#ff6278;border:1px solid #ff4e68;font-size:30px;box-shadow:0 0 50px #ff4e6822}.modal h2{text-align:center;font:700 23px "Space Grotesk";margin:17px 0 5px}.modal p{text-align:center;color:#859aa5;font-size:11px;line-height:1.7}.counter{text-align:center;font:700 43px "Space Grotesk";color:#ff6076;margin:12px}.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.sos-fab{position:fixed;z-index:40;right:30px;bottom:28px;width:78px;height:78px;border-radius:50%;border:5px solid #35151d;background:radial-gradient(circle,#ff6176,#d82548);color:white;font-weight:900;box-shadow:0 0 0 8px #ff4d6812,0 18px 45px #0008;cursor:pointer}.sos-fab:hover{transform:scale(1.04)}
+
+/* --- SafeTrack UI refinement --- */
+.subtitle{margin-top:7px;color:#8ca1ab;font-size:12px;max-width:620px}
+.global-status{display:flex;align-items:center;gap:9px;padding:8px 12px;border:1px solid #245041;background:#081b18;border-radius:12px;min-width:110px}
+.global-status small{display:block;color:#7fa39a;font-size:8px;letter-spacing:.1em}
+.global-status b{display:block;color:var(--green);font-size:11px;margin-top:1px}
+.status-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}
+.safety-briefing{display:flex;align-items:center;gap:15px;padding:15px 17px;margin-bottom:16px;border:1px solid #205247;border-radius:15px;background:linear-gradient(105deg,#0b211f,#0a1820);box-shadow:0 12px 35px #0003}
+.brief-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#0c352d;color:var(--green);font-weight:900;font-size:17px}
+.brief-copy{flex:1}.brief-copy .eyebrow{font-size:9px}.brief-copy h2{font:700 17px "Space Grotesk";margin:2px 0}.brief-copy p{font-size:11px;color:#8ca1ab;margin:0}.brief-copy strong{color:#ffc857}
+.brief-actions{display:flex;gap:8px}
+.legend-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px}.user-dot{background:var(--green);box-shadow:0 0 8px var(--green)}.risk-dot{background:var(--red);box-shadow:0 0 8px var(--red)}.safe-dot{background:var(--blue);box-shadow:0 0 8px var(--blue)}
+.route-label{font-size:8px;letter-spacing:.12em;color:#7ea3ad;margin-bottom:4px}.route-card>b{font-size:15px}.route-card>b span{color:#66818c}.route-card p{font-size:10px}
+.network-five{grid-template-columns:repeat(5,1fr)!important}
+.privacy-card{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:18px;margin-top:16px;border:1px solid #193742;border-radius:15px;background:linear-gradient(120deg,#091a23,#08151c)}
+.privacy-card h3{font:700 15px "Space Grotesk";margin:3px 0 5px}.privacy-card p{max-width:680px;color:#8399a4;font-size:11px;line-height:1.6;margin:0}
+.emergency-banner{margin-bottom:14px;padding:13px 15px;border:1px solid #71303d;border-radius:13px;background:#241017;color:#f6c4ca;display:flex;align-items:center;gap:12px;font-size:11px}
+.emergency-banner>div:nth-child(2){flex:1}.emergency-live{font-weight:900;color:#ff667b;display:flex;align-items:center;gap:7px}.emergency-live span{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 12px var(--red)}
+.timeline{display:grid;gap:0;margin:17px 0 3px}.timeline-item{display:flex;gap:10px;position:relative;padding:0 0 13px}.timeline-item:not(:last-child):before{content:"";position:absolute;left:3px;top:9px;bottom:0;width:1px;background:#24404b}.timeline-item>span{width:7px;height:7px;border-radius:50%;background:#34515d;margin-top:4px;z-index:1}.timeline-item.active>span{background:var(--green);box-shadow:0 0 9px var(--green)}.timeline-item b{font-size:10px;display:block}.timeline-item small{color:#708792;font-size:9px}
+.sos-active .sos-symbol{animation:sosPulse 1.4s infinite}@keyframes sosPulse{50%{transform:scale(1.06);box-shadow:0 0 55px #ff4e6838}}
+.btn:focus-visible,.nav button:focus-visible,.sos-fab:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+
+@media(max-width:1050px){.sidebar{width:72px}.brand span,.nav span,.profile div:last-child{display:none}.nav button{justify-content:center}.profile{left:9px;right:9px;padding:8px}.profile .avatar{margin:auto}main{margin-left:72px}.dashboard-grid,.section-grid,.sos-panel,.nfc-page{grid-template-columns:1fr}.lower{grid-template-columns:1fr}.auth-card{grid-template-columns:1fr}.auth-art{min-height:260px}.network{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){main{padding:16px}.top{align-items:flex-start}.title{font-size:23px}.actions .pill{display:none}.map-card{height:420px}.wide-map{height:470px}.lower{gap:12px}.sos-fab{right:17px;bottom:17px}.network{grid-template-columns:1fr}.modal-actions{grid-template-columns:1fr}}
+
+@media(max-width:650px){
+  .sidebar{width:100%;height:66px;top:auto;bottom:0;left:0;padding:6px 7px;border-right:0;border-top:1px solid var(--line);display:flex;align-items:center;z-index:80}
+  .brand,.profile{display:none}
+  .nav{width:100%;display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+  .nav button{padding:7px 3px;display:flex;flex-direction:column;gap:3px;justify-content:center;text-align:center;font-size:15px;border-radius:9px}
+  .nav span{display:block!important;font-size:8px;line-height:1}
+  .nav button:nth-child(n+6){display:none}
+  main{margin-left:0;padding:14px 14px 82px}
+  .sos-fab{bottom:82px;right:15px;width:66px;height:66px}
+}
+
+
+
+/* SafeWalk navigation experience */
+.safewalk-shell{position:relative}
+.safe-nav-map-wrap{position:relative;height:calc(100vh - 122px);min-height:650px;border:1px solid #183744;border-radius:20px;overflow:hidden;background:#061118;box-shadow:0 22px 70px rgba(0,0,0,.35)}
+.safewalk-map{height:100%!important;width:100%;filter:saturate(.9) contrast(1.04)}
+.safe-nav-map-wrap .leaflet-control-zoom{display:none}
+.safe-nav-map-wrap .map-cinematic-hud{display:none}
+.nav-top-card{position:absolute;z-index:900;top:18px;left:50%;transform:translateX(-50%);width:min(640px,calc(100% - 36px));min-height:76px;display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:16px;background:linear-gradient(110deg,rgba(5,29,27,.97),rgba(8,23,31,.96));border:1px solid rgba(53,223,177,.45);box-shadow:0 16px 45px rgba(0,0,0,.42),0 0 40px rgba(53,223,177,.08);backdrop-filter:blur(16px);transition:.35s ease}
+.nav-top-card.active{border-color:rgba(53,223,177,.72);box-shadow:0 18px 55px rgba(0,0,0,.5),0 0 45px rgba(53,223,177,.16)}
+.nav-back{width:38px;height:38px;border-radius:12px;border:1px solid #2a4b55;background:#07171e;color:#cfe0e3;font-size:28px;line-height:1;cursor:pointer}
+.nav-turn-icon{width:45px;height:45px;border-radius:13px;display:grid;place-items:center;background:#118d72;color:#fff;font-size:25px;font-weight:800;box-shadow:0 0 24px rgba(53,223,177,.25);flex:none}
+.nav-top-copy{min-width:0;flex:1}
+.nav-small,.nav-destination-label{font-size:8px;letter-spacing:.15em;color:#80a3ad;font-weight:700}
+.nav-instruction{font:700 15px "Space Grotesk";color:#fff;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-sub{font-size:10px;color:#a2b5bb;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-live{font-size:8px;letter-spacing:.12em;color:#35dfb1;display:flex;align-items:center;gap:5px}
+.nav-live span{width:7px;height:7px;border-radius:50%;background:#35dfb1;box-shadow:0 0 10px #35dfb1;animation:softPulse 1.5s infinite}
+.nav-route-badge{position:absolute;z-index:900;top:110px;left:20px;display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid #31525d;border-radius:10px;background:rgba(5,18,24,.86);backdrop-filter:blur(10px);font-size:9px;color:#c7d7db;box-shadow:0 10px 28px rgba(0,0,0,.22)}
+.nav-route-badge b{font-size:8px;letter-spacing:.11em;color:#35dfb1}
+.nav-route-badge span:last-child{color:#91a6ae}
+.nav-dot{width:7px;height:7px;border-radius:50%;background:#35dfb1;box-shadow:0 0 9px #35dfb1}
+.nav-recenter{position:absolute;z-index:900;right:20px;bottom:265px;width:43px;height:43px;border-radius:50%;border:1px solid #2b4d58;background:rgba(6,18,25,.92);color:#d7e4e7;font-size:20px;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.3);backdrop-filter:blur(10px)}
+.nav-bottom-panel{position:absolute;z-index:900;left:50%;bottom:18px;transform:translateX(-50%);width:min(640px,calc(100% - 36px));padding:15px 16px 14px;border-radius:18px;background:rgba(5,17,23,.95);border:1px solid #294b56;box-shadow:0 20px 55px rgba(0,0,0,.48),0 0 35px rgba(53,223,177,.05);backdrop-filter:blur(18px)}
+.nav-bottom-top{display:flex;justify-content:space-between;gap:15px;align-items:center}
+.nav-destination{font:700 16px "Space Grotesk";color:#fff;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:450px}
+.nav-safety-score{text-align:right}
+.nav-safety-score span{display:block;font-size:7px;letter-spacing:.13em;color:#819ba3}
+.nav-safety-score b{font:700 20px "Space Grotesk";color:#35dfb1}
+.nav-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0 9px}
+.nav-stats>div{padding:8px 10px;border:1px solid #193740;border-radius:10px;background:#08161d}
+.nav-stats b{display:block;font:700 15px "Space Grotesk";color:#fff}
+.nav-stats span{font-size:7px;letter-spacing:.12em;color:#78949d}
+.nav-progress-track{height:4px;background:#122a33;border-radius:99px;overflow:hidden}
+.nav-progress-track i{display:block;width:0;height:100%;background:linear-gradient(90deg,#35dfb1,#45a8ff);border-radius:99px;box-shadow:0 0 12px rgba(53,223,177,.45);transition:width .45s ease}
+.nav-actions{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-top:10px}
+.danger-outline{border-color:#66313d!important;color:#ff8192!important}
+.nav-planner{position:absolute;z-index:950;left:20px;bottom:20px;width:min(430px,calc(100% - 40px));padding:19px;border:1px solid #2b5661;border-radius:18px;background:rgba(5,18,24,.96);box-shadow:0 22px 65px rgba(0,0,0,.52),0 0 35px rgba(53,223,177,.08);backdrop-filter:blur(18px);transition:.35s ease}
+.nav-planner.hidden{opacity:0;transform:translateY(18px);pointer-events:none}
+.planner-eyebrow{font-size:8px;letter-spacing:.16em;color:#35dfb1;font-weight:800}
+.nav-planner h2{font:700 22px "Space Grotesk";margin:7px 0 5px;color:#fff}
+.nav-planner p{font-size:11px;color:#8ea4ad;line-height:1.55;margin:0 0 13px}
+.planner-input-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+.planner-input-row input{width:100%;padding:12px 13px;background:#07151d;border:1px solid #28505b;border-radius:11px;color:#fff;font-size:12px;outline:none}
+.planner-input-row input:focus{border-color:#35dfb1;box-shadow:0 0 0 3px rgba(53,223,177,.08)}
+.quick-destinations{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.quick-destinations button{border:1px solid #1e3d47;background:#091a22;color:#9eb2b9;border-radius:8px;padding:6px 8px;font-size:8px;cursor:pointer}
+.quick-destinations button:hover{border-color:#35dfb1;color:#d9efea}
+.planner-note{margin-top:12px;font-size:8px;color:#6f8992}.planner-note span{color:#35dfb1;margin-right:4px}
+.nav-mini-attribution{position:absolute;z-index:850;right:10px;bottom:8px;color:#81959c;background:rgba(3,10,14,.72);padding:4px 6px;border-radius:5px;font-size:7px;pointer-events:none}
+.safe-route-drawer{margin-top:12px;border:1px solid #193b46;border-radius:15px;background:#07141b;padding:15px}
+.drawer-head{display:flex;align-items:center;justify-content:space-between}.drawer-head h2{font:700 17px "Space Grotesk";margin:3px 0 0}.drawer-route-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.drawer-route-summary div{padding:9px;border:1px solid #193740;border-radius:10px;background:#091a22}.drawer-route-summary span{display:block;font-size:8px;color:#78929b}.drawer-route-summary b{display:block;margin-top:3px;font-size:11px;color:#fff}.drawer-steps{max-height:230px;overflow:auto;margin-top:12px}
+.nav-following .nav-top-card{animation:navCardGlow 2.8s ease-in-out infinite}
+@keyframes navCardGlow{0%,100%{box-shadow:0 16px 45px rgba(0,0,0,.42),0 0 28px rgba(53,223,177,.08)}50%{box-shadow:0 18px 55px rgba(0,0,0,.5),0 0 46px rgba(53,223,177,.2)}}
+.nav-following .safewalk-map{filter:saturate(1.08) contrast(1.06)}
+.nav-following .nav-bottom-panel{border-color:rgba(53,223,177,.38)}
+@media(max-width:900px){
+ .safe-nav-map-wrap{height:calc(100vh - 92px);min-height:610px;border-radius:14px}
+ .nav-top-card{top:10px;width:calc(100% - 20px)}
+ .nav-route-badge{top:96px;left:10px}
+ .nav-recenter{right:12px;bottom:255px}
+ .nav-bottom-panel{bottom:10px;width:calc(100% - 20px)}
+ .nav-planner{left:10px;bottom:10px;width:calc(100% - 20px)}
+ .safe-route-drawer{display:none}
+ .nav-mini-attribution{display:none}
+}
+
+</style>
+
+
+<style id="safetrack-map-polish">
+  .leaflet-control-attribution{font-size:9px!important;background:rgba(4,12,18,.78)!important;color:#91a5ae!important}
+  .leaflet-control-attribution a{color:#9ed6ca!important}
+  .map{position:relative}
+  .map::after{content:"LIVE SAFETY OVERLAY";position:absolute;z-index:400;right:12px;top:12px;padding:6px 8px;border:1px solid #244653;border-radius:8px;background:rgba(4,14,20,.78);color:#7ea7ad;font-size:8px;letter-spacing:.12em;pointer-events:none}
+</style>
+
+<style id="safetrack-motion-polish">
+/* Motion system: subtle, purposeful, and accessible */
+:root { --motion-fast: 180ms; --motion-mid: 320ms; --motion-slow: 650ms; }
+html { scroll-behavior: smooth; }
+body { animation: appFadeIn .55s ease-out both; }
+@keyframes appFadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes riseIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+@keyframes softPulse { 0%,100% { box-shadow:0 0 0 0 rgba(53,223,177,.16); } 50% { box-shadow:0 0 0 9px rgba(53,223,177,0); } }
+@keyframes sosPulse { 0%,100% { box-shadow:0 0 0 0 rgba(255,78,104,.30), 0 8px 28px rgba(255,78,104,.15); } 50% { box-shadow:0 0 0 12px rgba(255,78,104,0), 0 8px 32px rgba(255,78,104,.24); } }
+@keyframes radarSweep { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+@keyframes shimmer { 0% { background-position:150% 0; } 100% { background-position:-150% 0; } }
+@keyframes toastIn { from { opacity:0; transform:translateY(12px) scale(.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes nfcWave { 0% { transform:scale(.7); opacity:.7; } 100% { transform:scale(1.65); opacity:0; } }
+.card, .panel, .stat-card, .route-card, .contact-card, .map-card {
+  transition: transform var(--motion-mid) cubic-bezier(.2,.8,.2,1), border-color var(--motion-fast), box-shadow var(--motion-mid);
+}
+.card:hover, .panel:hover, .stat-card:hover, .route-card:hover, .contact-card:hover {
+  transform:translateY(-3px); border-color:rgba(70,167,255,.30);
+  box-shadow:0 14px 34px rgba(0,0,0,.16);
+}
+button, a, input, select { transition: transform var(--motion-fast), background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast); }
+button:active { transform:scale(.98); }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline:2px solid var(--blue); outline-offset:3px;
+}
+.nav button:hover { transform:translateX(3px); }
+#globalSafetyStatus .status-dot, .status-dot { animation:softPulse 2.4s ease-in-out infinite; }
+#sosButton, .sos-button, [data-action="sos"] { animation:sosPulse 2.2s ease-out infinite; }
+#toast, .toast { animation:toastIn .24s ease-out both; }
+#emergencyBanner { animation:riseIn .32s ease-out both; }
+#map, .leaflet-container { overflow:hidden; }
+.leaflet-marker-icon { transition:filter .25s, transform .25s; }
+.leaflet-marker-icon:hover { filter:brightness(1.18); transform:scale(1.08); }
+.motion-in { animation:riseIn .48s cubic-bezier(.2,.8,.2,1) both; }
+.motion-in:nth-child(2) { animation-delay:55ms; }
+.motion-in:nth-child(3) { animation-delay:110ms; }
+.motion-in:nth-child(4) { animation-delay:165ms; }
+.motion-in:nth-child(5) { animation-delay:220ms; }
+.nfc-ripple { position:relative; }
+.nfc-ripple::after { content:""; position:absolute; inset:12%; border:1px solid rgba(70,167,255,.55); border-radius:50%; animation:nfcWave 1.8s ease-out infinite; pointer-events:none; }
+.live-indicator { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); margin-right:7px; box-shadow:0 0 0 0 rgba(53,223,177,.5); animation:livePing 1.8s infinite; }
+@keyframes livePing { 70% { box-shadow:0 0 0 7px rgba(53,223,177,0); } 100% { box-shadow:0 0 0 0 rgba(53,223,177,0); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:.01ms !important; }
+}
+</style>
+
+
+<style id="safetrack-cinematic">
+/* CINEMATIC MOTION LAYER */
+:root{
+  --cyan:#46a7ff;
+  --mint:#35dfb1;
+  --danger:#ff4e68;
+}
+body{
+  position:relative;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-3;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 18%,rgba(53,223,177,.09),transparent 24%),
+    radial-gradient(circle at 82% 8%,rgba(70,167,255,.10),transparent 28%),
+    radial-gradient(circle at 70% 82%,rgba(255,78,104,.055),transparent 25%);
+  animation:ambientDrift 12s ease-in-out infinite alternate;
+}
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:999;
+  pointer-events:none;
+  opacity:.035;
+  background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px);
+  background-size:42px 42px;
+  mask-image:linear-gradient(to bottom,transparent,black 20%,black 80%,transparent);
+}
+@keyframes ambientDrift{
+  0%{transform:scale(1) translate3d(0,0,0)}
+  50%{transform:scale(1.05) translate3d(1%,-1%,0)}
+  100%{transform:scale(1.02) translate3d(-1%,1%,0)}
+}
+.brandmark{
+  position:relative;
+  animation:brandFloat 3.5s ease-in-out infinite;
+}
+.brandmark::after{
+  content:"";
+  position:absolute;
+  inset:-7px;
+  border:1px solid rgba(53,223,177,.22);
+  border-radius:13px;
+  animation:brandRing 2.4s ease-out infinite;
+}
+@keyframes brandFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(2deg)}}
+@keyframes brandRing{0%{transform:scale(.8);opacity:.7}100%{transform:scale(1.35);opacity:0}}
+.sidebar{
+  box-shadow:18px 0 60px rgba(0,0,0,.22);
+}
+.nav button{
+  position:relative;
+  overflow:hidden;
+}
+.nav button::before{
+  content:"";
+  position:absolute;
+  left:-100%;
+  top:0;
+  width:65%;
+  height:100%;
+  background:linear-gradient(90deg,transparent,rgba(53,223,177,.08),transparent);
+  transform:skewX(-20deg);
+  transition:left .55s ease;
+}
+.nav button:hover::before,.nav button.active::before{left:135%}
+.nav button.active{
+  box-shadow:inset 3px 0 var(--green),0 0 24px rgba(53,223,177,.05);
+}
+.page.active{
+  animation:pageCinematic .48s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes pageCinematic{
+  from{opacity:0;transform:translateY(10px) scale(.992);filter:blur(2px)}
+  to{opacity:1;transform:none;filter:blur(0)}
+}
+.top .eyebrow{
+  animation:eyebrowIn .65s .05s both;
+}
+.top .title{
+  animation:titleIn .7s .1s both;
+}
+.top .subtitle{
+  animation:titleIn .7s .16s both;
+}
+@keyframes eyebrowIn{from{opacity:0;letter-spacing:.32em;transform:translateX(-8px)}to{opacity:1;letter-spacing:.14em;transform:none}}
+@keyframes titleIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.card,.map-card,.safety-briefing{
+  position:relative;
+}
+.card::before,.map-card::before,.safety-briefing::before{
+  content:"";
+  position:absolute;
+  z-index:2;
+  top:0;
+  left:-45%;
+  width:35%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(112,232,255,.85),transparent);
+  filter:blur(.3px);
+  pointer-events:none;
+  animation:cardScan 6.5s ease-in-out infinite;
+}
+@keyframes cardScan{
+  0%,55%{left:-45%;opacity:0}
+  65%{opacity:1}
+  100%{left:125%;opacity:0}
+}
+.card:hover,.map-card:hover{
+  box-shadow:0 18px 55px rgba(0,0,0,.25),0 0 0 1px rgba(70,167,255,.06);
+}
+.metric{
+  position:relative;
+  overflow:hidden;
+}
+.metric::after{
+  content:"";
+  position:absolute;
+  inset:-50%;
+  background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.07) 50%,transparent 58%);
+  transform:translateX(-55%);
+  animation:metricShine 5s ease-in-out infinite;
+}
+@keyframes metricShine{0%,60%{transform:translateX(-55%)}80%,100%{transform:translateX(55%)}}
+.map-card{
+  isolation:isolate;
+}
+.map-card .map{
+  filter:saturate(.88) contrast(1.04);
+}
+.map-card .map::before{
+  content:"";
+  position:absolute;
+  z-index:450;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,transparent 0%,rgba(53,223,177,.035) 49%,transparent 52%),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.015) 0 1px,transparent 1px 5px);
+  mix-blend-mode:screen;
+}
+.map-card .map::after{
+  content:"";
+  position:absolute;
+  z-index:451;
+  left:0;
+  right:0;
+  top:-8%;
+  height:2px;
+  background:linear-gradient(90deg,transparent 0%,rgba(53,223,177,0) 12%,rgba(53,223,177,.7) 50%,rgba(53,223,177,0) 88%,transparent);
+  box-shadow:0 0 18px rgba(53,223,177,.45);
+  animation:mapScan 4.8s linear infinite;
+  pointer-events:none;
+}
+@keyframes mapScan{
+  0%{top:-5%;opacity:0}
+  8%{opacity:1}
+  92%{opacity:1}
+  100%{top:105%;opacity:0}
+}
+.map-status{
+  animation:hudFloat 4s ease-in-out infinite;
+  box-shadow:0 0 24px rgba(53,223,177,.035);
+}
+.map-status:nth-child(2){animation-delay:-1.3s}
+@keyframes hudFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+.route-card{
+  position:relative;
+  overflow:hidden;
+}
+.route-card::after{
+  content:"";
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:55px;
+  left:-70px;
+  background:linear-gradient(90deg,transparent,rgba(53,223,177,.13),transparent);
+  transform:skewX(-16deg);
+  animation:routeSweep 4.2s ease-in-out infinite;
+}
+@keyframes routeSweep{
+  0%,45%{left:-70px}
+  75%,100%{left:calc(100% + 30px)}
+}
+.leaflet-marker-icon{
+  filter:drop-shadow(0 0 5px rgba(53,223,177,.22));
+}
+.sos-fab{
+  animation:sosCinematic 2.5s ease-in-out infinite;
+}
+.sos-fab::before{
+  content:"";
+  position:absolute;
+  inset:-13px;
+  border:1px solid rgba(255,78,104,.28);
+  border-radius:50%;
+  animation:sosRing 2.5s ease-out infinite;
+}
+.sos-fab::after{
+  content:"";
+  position:absolute;
+  inset:5px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.14);
+  animation:sosInner 2.2s ease-in-out infinite;
+}
+@keyframes sosCinematic{
+  0%,100%{transform:translateY(0) scale(1);box-shadow:0 0 0 8px rgba(255,78,104,.07),0 18px 45px rgba(0,0,0,.53),0 0 24px rgba(255,78,104,.12)}
+  50%{transform:translateY(-3px) scale(1.035);box-shadow:0 0 0 12px rgba(255,78,104,.02),0 24px 52px rgba(0,0,0,.6),0 0 42px rgba(255,78,104,.28)}
+}
+@keyframes sosRing{0%{transform:scale(.72);opacity:.8}75%,100%{transform:scale(1.22);opacity:0}}
+@keyframes sosInner{0%,100%{opacity:.2;transform:scale(.94)}50%{opacity:.75;transform:scale(1)}}
+.modal.show .modal-box{
+  animation:modalCinematic .45s cubic-bezier(.16,1,.3,1) both;
+}
+.modal.show .ring{
+  animation:dangerRing 1.5s ease-in-out infinite;
+}
+@keyframes modalCinematic{
+  from{opacity:0;transform:translateY(20px) scale(.9);filter:blur(5px)}
+  to{opacity:1;transform:none;filter:blur(0)}
+}
+@keyframes dangerRing{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,78,104,.18),0 0 50px rgba(255,78,104,.12)}
+  50%{box-shadow:0 0 0 12px rgba(255,78,104,0),0 0 65px rgba(255,78,104,.25)}
+}
+.nfc-card{
+  position:relative;
+  overflow:hidden;
+}
+.nfc-card::before{
+  content:"";
+  position:absolute;
+  width:180px;
+  height:180px;
+  left:-80px;
+  top:-90px;
+  border-radius:50%;
+  border:1px solid rgba(70,167,255,.18);
+  box-shadow:0 0 0 18px rgba(70,167,255,.025),0 0 0 38px rgba(70,167,255,.018);
+  animation:nfcOrbit 4s linear infinite;
+}
+@keyframes nfcOrbit{to{transform:rotate(360deg)}}
+.live-indicator{animation:livePing 1.35s infinite,liveGlow 2.2s ease-in-out infinite}
+@keyframes liveGlow{0%,100%{opacity:.65}50%{opacity:1}}
+.event{
+  transition:transform .25s ease,background .25s ease;
+}
+.event:hover{
+  transform:translateX(5px);
+  background:linear-gradient(90deg,rgba(53,223,177,.035),transparent);
+}
+.event .icon{
+  transition:transform .3s ease,box-shadow .3s ease;
+}
+.event:hover .icon{
+  transform:rotate(-4deg) scale(1.06);
+  box-shadow:0 0 18px rgba(53,223,177,.09);
+}
+.btn.primary,.btn.danger{
+  position:relative;
+  overflow:hidden;
+}
+.btn.primary::after,.btn.danger::after{
+  content:"";
+  position:absolute;
+  top:-40%;
+  left:-70%;
+  width:45%;
+  height:180%;
+  transform:skewX(-20deg);
+  background:rgba(255,255,255,.2);
+  animation:buttonShine 3.8s ease-in-out infinite;
+}
+@keyframes buttonShine{
+  0%,60%{left:-70%}
+  78%,100%{left:140%}
+}
+@media (prefers-reduced-motion:reduce){
+  body::before,body::after,.brandmark,.brandmark::after,.nav button::before,.page.active,
+  .top .eyebrow,.top .title,.top .subtitle,.card::before,.map-card::before,.safety-briefing::before,
+  .metric::after,.map-card .map::after,.map-status,.route-card::after,.sos-fab,.sos-fab::before,
+  .sos-fab::after,.modal.show .modal-box,.modal.show .ring,.nfc-card::before,.live-indicator,
+  .event:hover .icon,.btn.primary::after,.btn.danger::after{animation:none!important}
+}
+</style>
+
+
+<style id="safetrack-map-hud">
+.map-cinematic-hud{
+  position:absolute;
+  z-index:600;
+  right:14px;
+  bottom:15px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 9px;
+  border:1px solid rgba(53,223,177,.25);
+  border-radius:9px;
+  background:rgba(3,14,19,.72);
+  color:#7da19f;
+  font:9px "Space Grotesk",sans-serif;
+  letter-spacing:.09em;
+  backdrop-filter:blur(7px);
+  pointer-events:none;
+  box-shadow:0 0 20px rgba(53,223,177,.04);
+  animation:hudAppear .8s .25s both;
+}
+.hud-crosshair{
+  width:14px;height:14px;border:1px solid rgba(53,223,177,.7);border-radius:50%;
+  display:grid;place-items:center;color:#35dfb1;font-size:10px;
+  animation:crosshairPulse 2s ease-in-out infinite;
+}
+.hud-label{color:#9cc8c0}
+.hud-coords{color:#607d86}
+@keyframes hudAppear{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes crosshairPulse{0%,100%{box-shadow:0 0 0 0 rgba(53,223,177,.2)}50%{box-shadow:0 0 0 5px rgba(53,223,177,0)}}
+
+/* === SafeTrack Functional MVP layer === */
+.live-indicator{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);margin-right:5px;animation:liveBlink 1.2s infinite}
+@keyframes liveBlink{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.functional-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;margin:-4px 0 16px;border:1px solid #193b46;border-radius:12px;background:rgba(7,20,28,.78);font-size:10px;color:#8ca1ab}
+.functional-bar b{color:var(--green)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-grid .field{margin-top:0}
+.dialog{position:fixed;inset:0;z-index:950;background:#02070bcc;backdrop-filter:blur(12px);display:none;place-items:center}
+.dialog.show{display:grid}.dialog-box{width:min(500px,calc(100% - 28px));padding:24px;border:1px solid #214452;background:#091720;border-radius:18px;box-shadow:0 30px 100px #000}
+.dialog-box h3{font:700 19px 'Space Grotesk';margin:0 0 5px}.dialog-box p{color:#8197a4;font-size:11px;line-height:1.6}.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.activity-live{animation:activityGlow 2.5s ease-in-out infinite}@keyframes activityGlow{0%,100%{box-shadow:0 0 0 rgba(53,223,177,0)}50%{box-shadow:0 0 25px rgba(53,223,177,.08)}}
+@media(max-width:980px){.sidebar{width:78px}.sidebar .brand span,.sidebar .nav span,.sidebar .profile div:not(.avatar){display:none}.brand{justify-content:center;padding-left:0;padding-right:0}.nav button{justify-content:center;font-size:18px}.profile{justify-content:center}.profile .avatar{margin:auto}main{margin-left:78px;padding:18px}.dashboard-grid,.section-grid,.sos-panel,.nfc-page,.auth-card{grid-template-columns:1fr}.lower{grid-template-columns:1fr}.map-card,.wide-map{height:460px}}
+@media(max-width:650px){main{margin-left:0;padding:12px 12px 90px}.top{align-items:flex-start;flex-direction:column}.actions{width:100%;flex-wrap:wrap}.sos-fab{right:18px;bottom:72px}.form-grid{grid-template-columns:1fr}.network{grid-template-columns:1fr 1fr}.title{font-size:24px}}
+</style>
+
+<style id="safetrack-route-follow-css">
+.route-follow{border:1px solid #275463;background:linear-gradient(135deg,#071a21,#061218);border-radius:12px;padding:12px;box-shadow:0 0 30px rgba(53,223,177,.08)}
+.route-next{font-size:16px;font-weight:800;color:#fff;margin:7px 0}.route-step{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid #18333d}.route-step:last-child{border-bottom:0}.route-step-num{min-width:23px;height:23px;border-radius:50%;display:grid;place-items:center;background:#10332f;color:#35dfb1;font-size:10px;font-weight:800}.route-step-text{font-size:11px;color:#d5e2e5}.route-step-dist{font-size:9px;color:#7e99a2;margin-top:2px}.route-follow.active{box-shadow:0 0 34px rgba(53,223,177,.18),inset 0 0 25px rgba(53,223,177,.04)}
+</style>
+
+<style id="safetrack-mobile-nav">
+/* Authoritative phone layout (<=650px): bottom tab bar replaces the sidebar.
+   Placed last so it wins over the earlier, conflicting 650/980/1050px rules. */
+@media(max-width:650px){
+  html body .sidebar{display:flex;align-items:center;position:fixed;top:auto;bottom:0;left:0;right:0;width:100%;height:calc(62px + env(safe-area-inset-bottom,0px));padding:5px 6px env(safe-area-inset-bottom,0px);border-right:0;border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.35);z-index:80}
+  html body .sidebar .brand,html body .sidebar .profile{display:none}
+  html body .sidebar .nav{width:100%;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px}
+  html body .sidebar .nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 1px;min-width:0;font-size:15px;line-height:1;text-align:center;border-radius:9px;box-shadow:none}
+  html body .sidebar .nav button.active{box-shadow:inset 0 3px var(--green)}
+  html body .sidebar .nav button:hover{transform:none}
+  html body .sidebar .nav button span{display:block!important;max-width:100%;font-size:7.5px;line-height:1.1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  html body .sidebar .nav button:nth-child(n+6){display:flex}
+  html body main{margin-left:0;padding:12px 12px calc(86px + env(safe-area-inset-bottom,0px))}
+  /* keep the SOS button reachable but clear of the tab bar */
+  html body .sos-fab{right:14px;bottom:calc(74px + env(safe-area-inset-bottom,0px));width:60px;height:60px;font-size:13px}
+  /* SafeWalk: map stops above the tab bar; panels sit above the SOS button */
+  html body .safe-nav-map-wrap{height:calc(100dvh - 150px - env(safe-area-inset-bottom,0px));min-height:520px}
+  html body .nav-bottom-panel,html body .nav-planner{bottom:76px}
+  html body .nav-recenter{bottom:auto;top:176px;right:12px}
+  html body .toast{top:12px;right:12px;left:12px}
+}
+</style>
+
+<style id="safetrack-safewalk-css">
+/* --- SafeWalk map: light, muted, crisp --- */
+#walkMap.leaflet-container{background:#e7ebee}
+#walkMap::after{display:none}                                     /* no decorative "LIVE SAFETY OVERLAY" tag on the nav map */
+html body .safewalk-map,html body .nav-following .safewalk-map{filter:none}   /* CSS filters soften raster tiles */
+#walkMap .leaflet-marker-icon{transition:none;filter:none}
+#walkMap .leaflet-marker-icon:hover{transform:none}
+#walkMap .leaflet-control-attribution{background:rgba(255,255,255,.8)!important;color:#4a5a66!important}
+#walkMap .leaflet-control-attribution a{color:#1a5fb4!important}
+#safewalk.page.active{animation:swFade .25s ease-out both}       /* opacity only: no blur/transform layer over the map */
+@keyframes swFade{from{opacity:0}to{opacity:1}}
+.sw-me{background:none;border:0}
+.sw-me-dot{position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:#1a73e8;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+.sw-me-cone{position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-36px 0 0 -18px;transform-origin:50% 100%;clip-path:polygon(50% 100%,0 0,100% 0);background:linear-gradient(to top,rgba(26,115,232,.6),rgba(26,115,232,0));display:none}
+.sw-dest{background:none;border:0}
+.sw-dest span{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#0f2a3a;color:#fff;font-size:16px;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+.sw-gps{position:absolute;z-index:900;top:110px;right:20px;display:flex;align-items:center;gap:7px;padding:8px 11px;border-radius:10px;font-size:9px;font-weight:800;letter-spacing:.1em;background:rgba(5,18,24,.9);border:1px solid #31525d;color:#c7d7db;backdrop-filter:blur(10px);pointer-events:none}
+.sw-gps-dot{width:8px;height:8px;border-radius:50%;background:#7a8a92}
+.sw-gps.ok{border-color:rgba(53,223,177,.5);color:#35dfb1}.sw-gps.ok .sw-gps-dot{background:#35dfb1;box-shadow:0 0 8px #35dfb1}
+.sw-gps.warn{border-color:rgba(255,200,87,.5);color:#ffc857}.sw-gps.warn .sw-gps-dot{background:#ffc857}
+.sw-gps.bad{border-color:rgba(255,78,104,.55);color:#ff7d8f}.sw-gps.bad .sw-gps-dot{background:#ff4e68}
+.sw-gps.demo{border-color:rgba(255,200,87,.7);color:#ffc857;background:rgba(40,28,6,.92)}.sw-gps.demo .sw-gps-dot{background:#ffc857}
+.sw-gps-msg{margin-top:12px;padding:11px 12px;border:1px solid rgba(255,78,104,.45);border-radius:11px;background:rgba(40,12,18,.7)}
+.sw-gps-msg b{font-size:12px;color:#ff9aa8}.sw-gps-msg p{margin:5px 0 9px!important;font-size:10px!important;line-height:1.5}
+.sw-gps-actions{display:flex;gap:7px;flex-wrap:wrap}
+@media(max-width:900px){.sw-gps{top:96px;right:10px}}
+.nav-recenter:not(.on){border-color:#ffc857;color:#ffc857}
+.nav-recenter.on{border-color:#35dfb1;color:#35dfb1;box-shadow:0 0 0 3px rgba(53,223,177,.15),0 10px 30px rgba(0,0,0,.3)}
+.nav-actions{grid-template-columns:1fr auto auto auto}
+.nav-planner input[readonly]{opacity:.6}
+.nav-planner .btn:disabled{opacity:.6;cursor:wait}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="brand"><div class="brandmark">✦</div><span>SafeTrack</span></div>
+<nav class="nav">
+<button class="active" onclick="page('dashboard',this)">◈ <span>Dashboard</span></button>
+<button onclick="page('map',this)">⌖ <span>Live Map</span></button>
+<button onclick="page('safewalk',this)">↗ <span>SafeWalk</span></button>
+<button onclick="page('sos',this)">◉ <span>SOS Center</span></button>
+<button onclick="page('network',this)">♧ <span>Trusted Network</span></button>
+<button onclick="page('nfc',this)">⌁ <span>NFC Card</span></button>
+<button onclick="page('safety',this)">◌ <span>Safety Intel</span></button>
+</nav>
+<div class="profile"><div class="avatar">M</div><div><b style="font-size:11px">Mannix Marasigan</b><br><span class="muted">Protected · Demo</span></div></div>
+</aside>
+
+<main>
+<div class="functional-bar"><span class="live-indicator"></span><span>LOCAL FUNCTIONAL MODE</span><b id="appStateLabel">Ready</b><span>· Data persists in this browser until connected to Supabase.</span></div>
+<section id="dashboard" class="page active">
+<div class="top"><div><div class="eyebrow">Personal safety network</div><div class="title">You're protected, Mannix.</div><div class="subtitle">Your safety network is ready. Check your area, stay connected, and get help fast.</div></div><div class="actions"><div class="global-status" id="globalSafetyStatus"><span class="status-dot"></span><span><small>SAFETY STATUS</small><b>SAFE</b></span></div><div class="pill"><span class="dot"></span>GPS <b id="gpsStatus">Demo ready</b></div><button class="btn" onclick="locate()">Use my location</button></div></div>
+<div class="safety-briefing">
+  <div class="brief-icon">✓</div>
+  <div class="brief-copy">
+    <div class="eyebrow">Safety briefing</div>
+    <h2>You're ready to move.</h2>
+    <p>Current area is <strong>moderate</strong>. Plan a walking route in SafeWalk, and your trusted network is ready.</p>
+  </div>
+  <div class="brief-actions">
+    <button class="btn primary" onclick="page('safewalk',document.querySelectorAll('.nav button')[2])">Plan walking route</button>
+    <button class="btn" onclick="page('network',document.querySelectorAll('.nav button')[4])">View safety circle</button>
+  </div>
+</div>
+<div class="dashboard-grid">
+<div class="card map-card"><div id="dashMap" class="map"></div><div class="map-overlay">
+  <div class="map-status"><span class="legend-dot user-dot"></span><strong>Your location</strong></div>
+  <div class="map-status"><span class="legend-dot risk-dot"></span>Elevated activity</div>
+  <div class="map-status"><span class="legend-dot safe-dot"></span>Safe place</div>
+</div><div class="map-bottom"><div class="route-card"><div class="route-label">↗ WALKING ROUTE</div><b>Plan a walk</b><p>Pick a destination and SafeWalk builds a walking route from your GPS location.</p></div><button class="btn primary" onclick="page('safewalk',document.querySelectorAll('.nav button')[2])">Open SafeWalk</button></div></div>
+<div class="side">
+<div class="card status"><div class="status-line"><div><div class="muted">Protection status</div><div class="big good">Protected</div></div><div style="font-size:27px">🛡</div></div><div class="progress"><i></i></div><div class="metrics"><div class="metric"><b>4</b><span>Trusted contacts</span></div><div class="metric"><b>1</b><span>NFC card</span></div></div></div>
+<div class="card"><div class="head"><h3>Notifications</h3><button class="btn" onclick="page('sos',document.querySelectorAll('.nav button')[3])">View all</button></div><div class="activity"><div class="event"><div class="icon green">✓</div><div><b>Network ready</b><p>Location sharing is available.</p><time>Just now</time></div></div><div class="event"><div class="icon">⌁</div><div><b>NFC card connected</b><p>Tap-to-SOS is enabled.</p><time>12 min ago</time></div></div><div class="event"><div class="icon red">!</div><div><b>Safety update</b><p>Elevated activity nearby.</p><time>1 hr ago</time></div></div></div></div>
+</div></div>
+<div class="lower">
+<div class="card pad"><h3 style="font-size:14px;margin:0">Trusted network</h3><div class="muted">People who can receive your SOS.</div><div id="dashboardContacts" class="contact-list"></div></div>
+<div class="card pad"><h3 style="font-size:14px;margin:0">NFC SOS card</h3><div class="muted">Your physical emergency shortcut.</div><div class="nfc-wrap"><div class="nfc-card">⌁</div><div><b style="font-size:11px">CARD #083A</b><p class="muted">● Ready · secure token active</p><button class="btn primary" onclick="simulateNfc()">Test card</button></div></div></div>
+<div class="card pad"><h3 style="font-size:14px;margin:0">Area safety</h3><div class="muted">Illustrative incident-density signal.</div><div style="margin-top:22px" class="riskbar"></div><div class="scale"><span>Lower</span><span>Moderate</span><span>Elevated</span></div><div class="option active" style="margin-top:15px"><div class="option-row"><b style="font-size:11px">Current area</b><span class="warn">Moderate</span></div><div class="muted" style="margin-top:5px">Check Safety Intelligence for details.</div></div></div>
+</div>
+</section>
+
+<section id="map" class="page"><div class="top"><div><div class="eyebrow">Live location</div><div class="title">Where you are, right now.</div><div class="subtitle" id="mapLocationMeta">Demo location · request GPS to go live.</div></div><div class="actions"><button class="btn" onclick="shareLocation()">Share location</button><button class="btn primary" onclick="locate(true)">Locate me</button></div></div><div class="card wide-map"><div id="liveMap" class="map"></div></div></section>
+
+<section id="safewalk" class="page">
+  <div class="safewalk-shell" id="safeWalkShell">
+    <div class="safe-nav-map-wrap">
+      <div id="walkMap" class="map safewalk-map"></div>
+
+      <div class="nav-top-card" id="navTopCard">
+        <button class="nav-back" onclick="exitSafeWalk()" aria-label="Exit SafeWalk">‹</button>
+        <div class="nav-turn-icon" id="navTurnIcon">↑</div>
+        <div class="nav-top-copy">
+          <div class="nav-small" id="navTopSmall">WALKING ROUTE</div>
+          <div class="nav-instruction" id="navInstruction">Choose a destination to start</div>
+          <div class="nav-sub" id="navSub">SafeWalk will build a real walking route</div>
+        </div>
+        <div class="nav-live"><span></span><i id="navLiveText" style="font-style:normal">READY</i></div>
+      </div>
+
+      <div class="nav-route-badge" id="navRouteBadge">
+        <span class="nav-dot"></span>
+        <b>WALKING ROUTE</b>
+        <span id="navRouteStatus">Ready</span>
+      </div>
+
+      <div class="sw-gps idle" id="swGpsChip" role="status" aria-live="polite"><span class="sw-gps-dot"></span><span id="swGpsText">GPS OFF</span></div>
+
+      <button class="nav-recenter" onclick="recenterSafeWalk()" title="Recenter and follow my location" aria-label="Recenter and follow my location">⌾</button>
+
+      <div class="nav-bottom-panel" id="navBottomPanel">
+        <div class="nav-bottom-top">
+          <div>
+            <div class="nav-destination-label">DESTINATION</div>
+            <div class="nav-destination" id="navDestination">Set a destination</div>
+          </div>
+          <div class="nav-safety-score"><span>START POINT</span><b id="navOriginLabel">—</b></div>
+        </div>
+        <div class="nav-stats">
+          <div><b id="navEta">—</b><span>ETA</span></div>
+          <div><b id="navDistance">—</b><span>REMAINING</span></div>
+          <div><b id="navProgress">0%</b><span>COMPLETE</span></div>
+        </div>
+        <div class="nav-progress-track"><i id="navProgressBar"></i></div>
+        <div class="nav-actions">
+          <button class="btn primary" id="navStartBtn" onclick="startRouteFollow()">▶ Start SafeWalk</button>
+          <button class="btn" id="navStopBtn" onclick="stopRouteFollow()" style="display:none">■ Stop</button>
+          <button class="btn" id="navRecalcBtn" onclick="recalculateRoute()" style="display:none">Recalculate</button>
+          <button class="btn danger-outline" id="navExitBtn" onclick="exitSafeWalk()">Exit</button>
+        </div>
+      </div>
+
+      <div class="nav-planner" id="navPlanner">
+        <div class="planner-eyebrow">SAFEWALK NAVIGATION</div>
+        <h2>Where are you going?</h2>
+        <p>Enter a destination and SafeTrack will generate a real pedestrian route from your current position.</p>
+        <div class="planner-input-row">
+          <input id="destination" placeholder="e.g. BGC High Street" autocomplete="off" enterkeyhint="go" aria-label="Destination" onkeydown="if(event.key==='Enter'){event.preventDefault();calculateRoute()}">
+          <button class="btn primary" id="navGoBtn" onclick="calculateRoute()">Go</button>
+        </div>
+        <div class="sw-gps-msg" id="swGpsMsg" style="display:none" role="alert">
+          <b>Location unavailable</b>
+          <p>Allow location access to start SafeWalk.</p>
+          <div class="sw-gps-actions"><button class="btn" onclick="retrySafeWalkGps()">Retry location</button><button class="btn" onclick="useDemoLocation()">Use DEMO LOCATION (preview only)</button></div>
+        </div>
+        <div class="quick-destinations">
+          <button onclick="quickDestination('Bonifacio High Street, Taguig')">BGC High Street</button>
+          <button onclick="quickDestination('SM Aura, Taguig')">SM Aura</button>
+          <button onclick="quickDestination('University of Asia and the Pacific, Pasig')">UA&amp;P</button>
+          <button onclick="quickDestination('SM Megamall')">SM Megamall</button>
+        </div>
+        <div class="planner-note"><span>●</span> Walking route · OpenStreetMap data · starts from your GPS location</div>
+      </div>
+
+      <div class="nav-mini-attribution">© OpenStreetMap contributors · SafeTrack navigation prototype</div>
+    </div>
+
+    <div class="safe-route-drawer" id="routeDrawer">
+      <div class="drawer-head">
+        <div><div class="eyebrow">Route details</div><h2>SafeWalk</h2></div>
+        <span class="pill">WALKING</span>
+      </div>
+      <div class="drawer-route-summary">
+        <div><span>Distance</span><b id="routeMetaDist">—</b></div>
+        <div><span>Walking time</span><b id="routeMetaTime">—</b></div>
+        <div><span>Maneuvers</span><b id="routeMetaSteps">—</b></div>
+      </div>
+      <p class="drawer-disclaimer" id="routeVerifyNote" style="margin:10px 0 0"></p>
+      <div class="drawer-steps" id="routeSteps" style="display:none"></div>
+      <button class="btn" style="width:100%;margin-top:12px" onclick="toggleRouteDrawer()">☰ Turn-by-turn details</button>
+      <p class="drawer-disclaimer">Walking routes come from OpenStreetMap data and may not reflect current conditions. SafeWalk does not use safety data yet. GPS and routing depend on device permissions and network availability.</p>
+    </div>
+  </div>
+</section>
+
+<section id="sos" class="page"><div class="top"><div><div class="eyebrow">Emergency response</div><div class="title">SOS Center</div></div><button class="btn danger" onclick="openSOS()">Trigger demo SOS</button></div><div class="sos-panel"><div class="emergency-banner" id="emergencyBanner" style="display:none">
+  <div class="emergency-live"><span></span> SOS ACTIVE</div>
+  <div>SOS is active on this device. Prototype: nothing is sent to your trusted contacts or emergency services.</div>
+  <button class="btn" onclick="endSOS()">End SOS</button>
+</div>
+<div class="card sos-state"><div class="sos-symbol">!</div><h2 style="font:700 22px 'Space Grotesk';margin:0">SOS is ready</h2><p class="muted" style="line-height:1.7">Hold the physical NFC card or use the SOS button. In this showcase, no real emergency service is contacted.</p><button class="btn danger" onclick="openSOS()">Start SOS flow</button><div class="network"><div class="person"><div class="mini">M</div><b>Mom</b><small>Primary</small><div class="check">✓ Ready</div></div><div class="person"><div class="mini">D</div><b>Dad</b><small>Family</small><div class="check">✓ Ready</div></div><div class="person"><div class="mini">J</div><b>Liam</b><small>Friend</small><div class="check">✓ Ready</div></div></div></div>
+<div class="card pad"><h3 style="font:700 16px 'Space Grotesk';margin:0">Emergency information package</h3><p class="muted" style="line-height:1.7">A production system can prepare a secure incident record for an authorized emergency response workflow.</p><div class="data-row"><b>Location</b><span id="sosLocation">Pending GPS</span></div><div class="data-row"><b>Timestamp</b><span>Generated at activation</span></div><div class="data-row"><b>GPS accuracy</b><span>Device dependent</span></div><div class="data-row"><b>Trusted contacts</b><span id="sosContactCount">0 configured</span></div><div class="data-row"><b>Emergency number</b><span>911 · Philippines</span></div><div class="timeline">
+  <div class="timeline-item active"><span></span><div><b>SOS workflow ready</b><small>Waiting for activation</small></div></div>
+  <div class="timeline-item"><span></span><div><b>Trusted network notified</b><small>Secure location link</small></div></div>
+  <div class="timeline-item"><span></span><div><b>Live location shared</b><small>Updates while SOS is active</small></div></div>
+</div>
+<div class="option" style="margin-top:18px"><b style="font-size:11px">Production integration</b><p class="muted">Requires authorized emergency-service or response-center integration. The website alone cannot silently dispatch authorities.</p></div></div></div>
+<div class="card" style="margin-top:16px"><div class="head"><h3>Recent alert history</h3><span class="pill">Demo events</span></div><div class="activity"><div class="event"><div class="icon red">!</div><div style="flex:1"><b>SOS event · Current session</b><p>Location package prepared. No real dispatch.</p><time>Ready</time></div><span class="pill">TEST</span></div><div class="event"><div class="icon green">✓</div><div><b>Safety update</b><p>Walking route planning is available in SafeWalk.</p><time>Today · 6:41 PM</time></div></div></div></div>
+</section>
+
+<section id="network" class="page"><div class="top"><div><div class="eyebrow">Trusted network</div><div class="title">Your people, connected.</div></div><button class="btn primary" onclick="openContactDialog()">+ Add contact</button></div><div class="card pad"><h2 style="font:700 20px 'Space Grotesk';margin:0">Emergency contacts</h2><p class="muted">In a production version, contacts receive a secure, expiring live-location link during an SOS.</p><div id="networkGrid" class="network network-five"></div></div>
+<div class="privacy-card">
+  <div>
+    <div class="eyebrow">Privacy & location</div>
+    <h3>Your location stays private by default.</h3>
+    <p>Only authorized contacts can receive your live location during an active SOS. Public users never see your exact position.</p>
+  </div>
+  <button class="btn" onclick="toast('Privacy settings opened · demo')">Review settings</button>
+</div>
+<div class="card pad" style="margin-top:16px"><h3 style="font:700 16px 'Space Grotesk';margin:0">Live SOS tracking preview</h3><p class="muted">This is what a trusted contact could see after receiving an alert.</p><div class="data-row"><b>Status</b><span class="danger-t">● SOS active</span></div><div class="data-row"><b>Last location update</b><span>3 seconds ago</span></div><div class="data-row"><b>Location access</b><span>Active</span></div><button class="btn primary" style="margin-top:14px" onclick="page('sos',document.querySelectorAll('.nav button')[3])">Open incident</button></div></section>
+
+<section id="nfc" class="page"><div class="top"><div><div class="eyebrow">Hardware trigger</div><div class="title">SafeTrack NFC Card</div></div><div class="pill"><span class="dot"></span>Card ready</div></div><div class="nfc-page"><div class="card hero-card"><div class="big-nfc"><div class="symbol">⌁</div><strong>SAFETRACK</strong><small>CARD #083A</small></div><button class="btn primary" onclick="simulateNfc()">Simulate NFC tap</button></div><div class="card panel"><h2>Tap. Confirm. Get help.</h2><p>The physical NFC card is designed to be a fast shortcut into the emergency workflow. A real tag can store a unique HTTPS URL tied to a secure card token.</p><div class="steps"><div class="step"><div class="step-num">1</div><div><b>Tap your NFC card</b><p>Phone opens the SafeTrack emergency URL.</p></div></div><div class="step"><div class="step-num">2</div><div><b>Confirm SOS</b><p>Prevent accidental taps with a short confirmation flow.</p></div></div><div class="step"><div class="step-num">3</div><div><b>Location starts sharing</b><p>GPS position is sent to the authorized safety network.</p></div></div><div class="step"><div class="step-num">4</div><div><b>Trusted network is notified</b><p>Family and selected contacts receive a secure tracking link.</p></div></div></div><div class="option" style="margin-top:18px"><div class="option-row"><b>Card status</b><span class="safe">Active</span></div><div class="muted">Secure token · Last tested today · Owner: Mannix</div></div></div></div></section>
+
+<section id="safety" class="page"><div class="top"><div><div class="eyebrow">Risk intelligence</div><div class="title">Safety Intelligence</div></div><div class="pill">Illustrative dataset · Last 30 days</div></div><div class="section-grid"><div class="card wide-map"><div id="safetyMap" class="map"></div></div><div class="card panel"><h2>Area insight</h2><p>SafeTrack can aggregate verified incident reports and other approved data sources into a time-aware safety signal.</p><div class="option"><div class="option-row"><b>Current area</b><span class="warn">Moderate</span></div><p class="muted">Illustrative activity level. Not a statement that an area is objectively dangerous.</p></div><div class="option"><div class="option-row"><b>Evening signal</b><span class="danger-t">Elevated</span></div><p class="muted">Example: higher report density during selected evening hours.</p></div><div class="option"><div class="option-row"><b>Nearby safe places</b><span class="safe">4</span></div><p class="muted">Hospitals, police facilities and verified safe locations can be displayed here.</p></div><h3 style="font-size:12px;margin-top:24px">Risk scale</h3><div class="riskbar"></div><div class="scale"><span>Lower</span><span>Moderate</span><span>Elevated</span></div></div></div></section>
+
+<section id="login" class="page"><div style="padding-top:30px"><div class="card auth-card"><div class="auth-art"><div class="brand"><div class="brandmark">✦</div><span>SafeTrack</span></div><div><h2>Your safety, connected.</h2><p>Real-time location, emergency contacts, NFC SOS and walking routes in one personal safety network.</p></div></div><div class="auth-form"><div class="eyebrow">Welcome back</div><h2>Sign in</h2><div class="field"><label>EMAIL</label><input placeholder="you@example.com"></div><div class="field"><label>PASSWORD</label><input type="password" placeholder="••••••••"></div><button class="btn primary full" onclick="localSignIn()">Enter SafeTrack</button><div class="note">Local preview mode: this stores a demo session in your browser. Supabase authentication will replace this layer when you connect the backend.</div></div></div></div></section>
+</main>
+</div>
+
+<button class="sos-fab" onclick="openSOS()">SOS</button>
+<div class="toast" id="toast"></div>
+<div class="modal" id="sosModal"><div class="modal-box"><div class="ring">!</div><h2>Ready to activate SOS?</h2><p id="sosModalText">SOS activates automatically when the countdown reaches zero. Press Cancel to stop it.</p><div class="counter" id="counter">05</div><div class="modal-actions"><button class="btn" onclick="closeSOS()">Cancel</button><button class="btn danger" onclick="sendSOS()">Activate now</button></div></div></div>
+
+
+<div class="dialog" id="contactDialog"><div class="dialog-box"><div class="eyebrow">Trusted network</div><h3>Add emergency contact</h3><p>Add a contact locally now. Later, Supabase invitations will turn this into a real cross-device connection.</p><div class="form-grid"><div class="field"><label>NAME</label><input id="contactName" placeholder="e.g. Alex"></div><div class="field"><label>RELATIONSHIP</label><input id="contactRelation" placeholder="Friend"></div></div><div class="dialog-actions"><button class="btn" onclick="closeContactDialog()">Cancel</button><button class="btn primary" onclick="addContact()">Add contact</button></div></div></div>
+<div class="dialog" id="destinationDialog"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Vector basemap for SafeWalk only (OpenFreeMap "positron": keyless, light, crisp at any pixel density). Dashboard/Live maps are unchanged. -->
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"></script>
+<script>
+/* === SafeTrack functional browser MVP === */
+const demo=[14.5995,120.9842];
+let maps={}, mapLayers={}, userMarker=null, accuracyCircle=null, watchId=null, lastPosition=null, timer=null, count=5;
+const watchReasons=new Set();   // who needs the single GPS watch: 'sos', 'safewalk', 'locate'
+let sessionFixAt=null;          // time of the last real GPS fix obtained in THIS page session (never persisted)
+let recenterPending=false;      // recenter maps once on the next fix (explicit Locate / first fix), not on every update
+let gpsErrorShown=false, gpsFixAnnounced=false;
+let sosPending=false, sosToken=0;
+const STORAGE_KEY='safetrack_mvp_v1';
+const defaultState={
+  user:{name:'Mannix Marasigan',email:'demo@safetrack.local',signedIn:false},
+  contacts:[{name:'Mom',relation:'Primary',online:true},{name:'Dad',relation:'Family',online:true},{name:'Liam',relation:'Friend',online:true},{name:'Kuya Paolo',relation:'Relative',online:false},{name:'Felix',relation:'Friend',online:true}],
+  card:{id:'083A',active:true},
+  location:{lat:demo[0],lon:demo[1],accuracy:null,live:false,lastUpdated:null},
+  sos:{active:false,startedAt:null,location:null,history:[]},
+  notifications:[{type:'green',title:'Network ready',body:'Local safety network initialized.',time:'Just now'}]
+};
+let state=loadState();
+/* Escape any text (user input or external API data) before it goes into innerHTML. */
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+/* Load saved state defensively. Transient GPS state (location.live) is never restored:
+   after a reload nothing is watching GPS until a watch is actually started again. */
+function loadState(){
+  const base=structuredClone(defaultState);
+  try{
+    const s=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+    if(s&&typeof s==='object'){
+      if(s.user&&typeof s.user==='object')base.user={...base.user,...s.user};
+      if(Array.isArray(s.contacts))base.contacts=s.contacts.filter(c=>c&&typeof c.name==='string').map(c=>({name:c.name,relation:String(c.relation||'Trusted contact'),online:!!c.online}));
+      if(s.card&&typeof s.card==='object')base.card={...base.card,...s.card};
+      if(s.location&&Number.isFinite(s.location.lat)&&Number.isFinite(s.location.lon))base.location={...base.location,lat:s.location.lat,lon:s.location.lon,accuracy:Number.isFinite(s.location.accuracy)?s.location.accuracy:null,lastUpdated:s.location.lastUpdated||null};
+      if(s.sos&&typeof s.sos==='object')base.sos={active:!!s.sos.active,startedAt:s.sos.startedAt||null,location:s.sos.location&&typeof s.sos.location==='object'?s.sos.location:null,history:Array.isArray(s.sos.history)?s.sos.history.slice(0,20):[]};
+      if(Array.isArray(s.notifications))base.notifications=s.notifications.slice(0,50);
+    }
+  }catch(e){}
+  base.location.live=false;
+  return base;
+}
+let storageWarned=false;
+function saveState(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify({...state,location:{...state.location,live:false}}))}
+  catch(e){if(!storageWarned){storageWarned=true;toast('Could not save data in this browser (storage blocked or full). Changes will be lost on reload.')}}
+  renderState();
+}
+function page(id,btn){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));const target=document.getElementById(id);if(target)target.classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');setTimeout(()=>{initMaps();Object.values(maps).forEach(m=>m.invalidateSize());if(id==='safewalk'){const has=!!activeRoute;document.getElementById('navPlanner')?.classList.toggle('hidden',has);document.getElementById('navRouteBadge').style.display=has?'flex':'none';document.getElementById('navBottomPanel').style.display=has?'block':'none';enterSafeWalkView()}},80)}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),2800)}
+function initials(name){return name.split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase()}
+function renderState(){
+  const signed=state.user.signedIn;
+  const profile=document.querySelector('.profile'); if(profile) profile.innerHTML='<div class="avatar">'+esc(initials(state.user.name))+'</div><div><b style="font-size:11px">'+esc(state.user.name)+'</b><br><span class="muted">'+(signed?'Protected · Local account':'Protected · Preview')+'</span></div>';
+  const status=document.getElementById('globalSafetyStatus');
+  if(status){const active=state.sos.active;status.style.borderColor=active?'#6b2a37':'#245041';status.style.background=active?'#241017':'#081b18';const dot=status.querySelector('.status-dot'),b=status.querySelector('b');dot.style.background=active?'var(--red)':'var(--green)';dot.style.boxShadow='0 0 12px '+(active?'var(--red)':'var(--green)');b.textContent=active?'SOS ACTIVE':'SAFE';b.style.color=active?'var(--red)':'var(--green)'}
+  const gps=document.getElementById('gpsStatus');if(gps)gps.textContent=state.location.live?'Live':'Demo ready';
+  const label=document.getElementById('appStateLabel');if(label)label.textContent=state.sos.active?'SOS ACTIVE':state.location.live?'GPS LIVE':'Ready';
+  const countEl=document.getElementById('sosContactCount');if(countEl)countEl.textContent=state.contacts.length+' configured';
+  const dash=document.getElementById('dashboardContacts');if(dash)dash.innerHTML=state.contacts.slice(0,3).map(c=>'<div class="contact"><div class="contact-left"><div class="mini">'+esc(initials(c.name))+'</div><div><b style="font-size:11px">'+esc(c.name)+'</b><br><span class="muted">'+esc(c.relation)+'</span></div></div><span class="online" style="background:'+(c.online?'var(--green)':'#718690')+'"></span></div>').join('');
+  const grid=document.getElementById('networkGrid');if(grid)grid.innerHTML=state.contacts.map((c,i)=>'<div class="person"><div class="mini">'+esc(initials(c.name))+'</div><b>'+esc(c.name)+'</b><small>'+esc(c.relation)+'</small><div class="check" style="color:'+(c.online?'var(--green)':'#718690')+'">'+(c.online?'● Online':'○ Offline')+'</div></div>').join('');
+  const loc=document.getElementById('sosLocation');
+  if(loc){
+    const coords=(l)=>l.lat.toFixed(5)+'°, '+l.lon.toFixed(5)+'°'+(Number.isFinite(l.accuracy)?' (±'+Math.round(l.accuracy)+'m)':'');
+    const sl=state.sos.location;
+    if(state.sos.active)loc.textContent=sl&&sl.confirmed?coords(sl)+' · GPS confirmed':'NOT CONFIRMED · no GPS fix yet';
+    else loc.textContent=sessionFixAt?coords(state.location)+' · last GPS fix':'No GPS fix yet';
+  }
+  const meta=document.getElementById('mapLocationMeta');if(meta)meta.textContent=state.location.live?'Live GPS · accuracy ±'+(state.location.accuracy?Math.round(state.location.accuracy):'?')+'m · updated '+relativeTime(state.location.lastUpdated):'Demo location · request GPS to go live.';
+  const banner=document.getElementById('emergencyBanner');if(banner)banner.style.display=state.sos.active?'flex':'none';
+}
+function relativeTime(ts){if(!ts)return 'just now';const sec=Math.max(0,Math.round((Date.now()-ts)/1000));return sec<60?sec+'s ago':Math.round(sec/60)+'m ago'}
+function updateMapPosition(lat,lon,accuracy,extra){
+  state.location={...state.location,lat,lon,accuracy,lastUpdated:Date.now()};
+  sessionFixAt=Date.now();
+  gps.status='active';gps.accuracy=accuracy;gps.message='';
+  if(typeof renderSwGps==='function')renderSwGps();
+  if(state.sos.active)state.sos.location={lat,lon,accuracy,confirmed:true,at:Date.now()};
+  // Only recenter once (explicit "Locate me" / first fix); never on every GPS tick,
+  // and never on the SafeWalk map while a route is displayed (it uses fitBounds).
+  const recenter=recenterPending;recenterPending=false;
+  Object.entries(maps).forEach(([id,m])=>{
+    if(id==='walkMap'){   // SafeWalk's map has its own marker + camera (see SafeWalk section)
+      updateWalkMapMarker(lat,lon,accuracy);
+      if(recenter&&!activeRoute&&!nav.active)cameraTo(lat,lon,{zoom:SW.PREVIEW_ZOOM,animate:false,heading:null});
+      return;
+    }
+    if(recenter)m.setView([lat,lon],Math.max(m.getZoom(),15));const layer=mapLayers[id];if(layer?.user){layer.user.setLatLng([lat,lon]);layer.user.bindPopup('<b>SafeTrack location</b><br>Live GPS');}if(layer?.accuracy){layer.accuracy.setLatLng([lat,lon]);layer.accuracy.setRadius(accuracy||50)}if(layer?.route){layer.route.setLatLngs([[lat,lon],[lat+.004,lon+.003],[lat+.007,lon+.008]])}const hud=document.querySelector('#'+id+' .hud-coords');if(hud)hud.textContent=lat.toFixed(4)+'°N · '+lon.toFixed(4)+'°E';});
+  saveState();
+  onSafeWalkPosition(lat,lon,accuracy,extra);
+}
+/* ---------- GPS core ----------
+   One shared watch (reasons: 'sos' | 'safewalk' | 'locate'), one in-flight one-shot request,
+   and a single `gps` status object that the UI reads. Real GPS is never faked: failures are
+   reported with a reason; a demo location is only ever used when the user explicitly opts in. */
+const gps={status:'idle',message:'',accuracy:null,approx:false};   // idle|requesting|active|lost|denied|timeout|unavailable|insecure|unsupported
+function gpsFileHint(){return location.protocol==='file:'?' This page was opened as a local file (file://); browsers may block location there. Serve it over http://localhost or HTTPS.':''}
+function describeGpsFailure(code,rawMessage){
+  const raw=String(rawMessage||'');
+  if(window.isSecureContext===false||/secure origin|only secure|secure context/i.test(raw))return {status:'insecure',short:'location needs a secure connection (HTTPS or localhost)',message:'Location needs a secure connection (HTTPS or localhost).'+gpsFileHint()};
+  if(code===1)return {status:'denied',short:'location permission denied',message:'Location permission was denied. Allow location access in your browser settings, then retry.'+gpsFileHint()};
+  if(code===3)return {status:'timeout',short:'GPS timed out',message:'Timed out waiting for a location fix. Try again near a window or on Wi-Fi.'};
+  if(code===2)return {status:'unavailable',short:'position unavailable',message:'Your device could not determine its position.'+gpsFileHint()};
+  if(code==='unsupported')return {status:'unsupported',short:'GPS is not supported on this device/browser',message:'This browser does not support location services.'};
+  return {status:'unavailable',short:'unknown GPS error',message:'Location is unavailable.'+gpsFileHint()};
+}
+function setGps(status,info){gps.status=status;gps.message=(info&&info.message)||'';if(typeof renderSwGps==='function')renderSwGps()}
+
+let acquireInflight=null;
+/* One-shot location. Stage 1: high accuracy, never cached. If that times out / is unavailable,
+   stage 2: network-based location (optionally a cached one up to 2 min old, flagged `approx`).
+   Resolves {lat,lon,accuracy,heading,speed,approx}; rejects with {status,short,message}. */
+function acquireLocation(opts){
+  if(acquireInflight)return acquireInflight;
+  opts=opts||{};
+  const total=opts.timeout||15000,allowCached=!!opts.allowCached,t1=Math.round(total*0.6),t2=total-t1;
+  const p=new Promise((resolve,reject)=>{
+    const fail=(code,msg)=>{const f=describeGpsFailure(code,msg);setGps(f.status,f);reject(f)};
+    if(!navigator.geolocation){fail('unsupported');return}
+    if(window.isSecureContext===false){fail(1,'secure context');return}
+    setGps('requesting');
+    const done=(pos,stage)=>{
+      const c=pos.coords,approx=stage===2;
+      gps.approx=approx;recenterPending=true;state.location.live=true;
+      updateMapPosition(c.latitude,c.longitude,c.accuracy,{heading:c.heading,speed:c.speed,approx});
+      resolve({lat:c.latitude,lon:c.longitude,accuracy:c.accuracy,heading:c.heading,speed:c.speed,approx});
+    };
+    navigator.geolocation.getCurrentPosition(pos=>done(pos,1),err=>{
+      if(err.code===1){fail(1,err.message);return}
+      navigator.geolocation.getCurrentPosition(pos=>done(pos,2),err2=>fail(err2.code,err2.message),{enableHighAccuracy:false,timeout:t2,maximumAge:allowCached?120000:0});
+    },{enableHighAccuracy:true,timeout:t1,maximumAge:0});
+  });
+  acquireInflight=p.finally(()=>{acquireInflight=null});
+  return acquireInflight;
+}
+/* Legacy wrapper used by SOS: fresh fix or a short reason string. */
+function getFreshPosition(timeoutMs=10000){
+  return acquireLocation({timeout:timeoutMs,allowCached:false}).then(f=>({lat:f.lat,lon:f.lon,accuracy:f.accuracy}),f=>Promise.reject(f.short));
+}
+
+let watchLowAcc=false, watchGotFix=false;
+function openWatch(){
+  watchGotFix=false;
+  watchId=navigator.geolocation.watchPosition(p=>{
+    watchGotFix=true;gpsErrorShown=false;
+    state.location.live=true;gps.approx=false;
+    updateMapPosition(p.coords.latitude,p.coords.longitude,p.coords.accuracy,{heading:p.coords.heading,speed:p.coords.speed});
+    if(!gpsFixAnnounced){gpsFixAnnounced=true;toast('GPS live · accuracy ±'+Math.round(p.coords.accuracy)+'m')}
+  },err=>{
+    if(err.code===1){
+      // Permission denied can never recover: release the watch for real.
+      const f=describeGpsFailure(1,err.message);
+      stopWatching();setGps(f.status,f);
+      if(typeof onGpsDenied==='function')onGpsDenied();
+      toast(f.short.charAt(0).toUpperCase()+f.short.slice(1)+(state.sos.active?' — your location cannot be confirmed while SOS is active.':'.'));
+      return;
+    }
+    // No fix has ever arrived on this watch with high accuracy (typical on laptops): reopen ONE watch in low-accuracy mode.
+    if(!watchGotFix&&!watchLowAcc&&watchId!==null){
+      watchLowAcc=true;navigator.geolocation.clearWatch(watchId);watchId=null;openWatch();return;
+    }
+    // Timeout / position unavailable afterwards: the browser keeps the same watch running and retries.
+    state.location.live=false;saveState();
+    const f=describeGpsFailure(err.code,err.message);
+    setGps(sessionFixAt?'lost':f.status,f);
+    if(!gpsErrorShown){gpsErrorShown=true;toast('GPS signal lost ('+(err.code===3?'timeout':'position unavailable')+') — still trying…')}
+  },{enableHighAccuracy:!watchLowAcc,maximumAge:5000,timeout:30000});
+}
+function startWatching(reason='general'){
+  if(!navigator.geolocation){const f=describeGpsFailure('unsupported');setGps(f.status,f);toast('This browser does not support GPS.');return false}
+  if(window.isSecureContext===false){const f=describeGpsFailure(1,'secure context');setGps(f.status,f);toast(f.message);return false}
+  watchReasons.add(reason);
+  if(watchId!==null)return true;
+  gpsErrorShown=false;gpsFixAnnounced=false;watchLowAcc=false;
+  if(!sessionFixAt)recenterPending=true;
+  const gpsEl=document.getElementById('gpsStatus');if(gpsEl)gpsEl.textContent='Requesting…';
+  if(!sessionFixAt||gps.status!=='active')setGps('requesting');
+  openWatch();
+  return true;
+}
+function locate(startLive=false){
+  const gEl=document.getElementById('gpsStatus');if(gEl)gEl.textContent='Requesting…';
+  acquireLocation({timeout:15000,allowCached:true}).then(f=>{
+    if(startLive)startWatching('locate');else if(state.sos.active)startWatching('sos');
+    toast('GPS location acquired · accuracy ±'+Math.round(f.accuracy)+'m'+(f.approx?' (approximate)':''));
+  },f=>{
+    if(gEl)gEl.textContent=sessionFixAt?'Last fix':'Demo ready';
+    toast(f.message+(sessionFixAt?' Keeping your last known location.':''));
+  });
+}
+/* stopWatching(reason) releases one requester; stopWatching() releases all and clears the watch. */
+function stopWatching(reason){
+  if(reason)watchReasons.delete(reason);else watchReasons.clear();
+  if(watchReasons.size>0)return;
+  if(watchId!==null&&navigator.geolocation){navigator.geolocation.clearWatch(watchId);watchId=null}
+  state.location.live=false;saveState();
+}
+function initMap(id,lat=state.location.lat,lon=state.location.lon){
+  if(maps[id]){maps[id].invalidateSize();return}
+  if(id==='walkMap'){initWalkMap(lat,lon);return}
+  const m=L.map(id,{zoomControl:true}).setView([lat,lon],14);maps[id]=m;
+  const mapEl=document.getElementById(id);
+  if(mapEl&&!mapEl.querySelector('.map-cinematic-hud')){const hud=document.createElement('div');hud.className='map-cinematic-hud';hud.innerHTML='<span class="hud-crosshair">+</span><span class="hud-label">SAFETRACK // LIVE</span><span class="hud-coords">'+lat.toFixed(4)+'°N · '+lon.toFixed(4)+'°E</span>';mapEl.appendChild(hud)}
+  const tileOptions={attribution:'&copy; OpenStreetMap contributors · Tiles courtesy of <a href="https://www.openstreetmap.fr/" target="_blank" rel="noopener">OpenStreetMap France</a>',maxZoom:19,crossOrigin:true};
+  const primary=L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',tileOptions).addTo(m);let tileErrors=0;primary.on('tileerror',()=>{if(++tileErrors===2){m.removeLayer(primary);L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors · Tiles courtesy of <a href="https://www.openstreetmap.fr/" target="_blank" rel="noopener">OpenStreetMap France / HOT</a>',maxZoom:19,crossOrigin:true}).addTo(m);toast('Map renderer switched to free fallback')}});
+  const risk=L.circle([lat+.005,lon+.004],{radius:650,color:'#ff4e68',fillColor:'#ff4e68',fillOpacity:.07,weight:1}).addTo(m);
+  const accuracy=L.circle([lat,lon],{radius:state.location.accuracy||80,color:'#35dfb1',fillColor:'#35dfb1',fillOpacity:.05,weight:1,dashArray:'4 7'}).addTo(m);
+  const user=L.circleMarker([lat,lon],{radius:7,color:'#fff',weight:3,fillColor:'#35dfb1',fillOpacity:1}).addTo(m).bindPopup('<b>SafeTrack location</b><br>'+(state.location.live?'Live GPS':'Demo location'));
+  let pulseRadius=7,growing=true;const pulse=setInterval(()=>{if(!document.body.contains(mapEl)){clearInterval(pulse);return}pulseRadius+=growing?.22:-.22;if(pulseRadius>=11)growing=false;if(pulseRadius<=7)growing=true;user.setRadius(pulseRadius)},70);
+  [[.006,.010,'Elevated activity',false],[.000,-.008,'Moderate activity',false],[.004,.014,'Safe place',true]].forEach(p=>{const marker=L.circleMarker([lat+p[0],lon+p[1]],{radius:p[3]?8:16,color:p[3]?'#35dfb1':'#ff536c',fillColor:p[3]?'#35dfb1':'#ff536c',fillOpacity:p[3]?.8:.18,weight:1}).addTo(m).bindPopup('<b>'+p[2]+'</b><br>Illustrative overlay');if(!p[3]){let op=.18,dir=1;setInterval(()=>{op+=.015*dir;if(op>.3)dir=-1;if(op<.1)dir=1;marker.setStyle({fillOpacity:op})},90)}});
+  // The dashed demo route is decorative; it only belongs on the dashboard/live maps (SafeWalk uses initWalkMap).
+  const route=L.polyline([[lat,lon],[lat+.004,lon+.003],[lat+.007,lon+.008]],{color:'#35dfb1',weight:4,opacity:.85,dashArray:'8 9'}).addTo(m);let dash=0;const routeTimer=setInterval(()=>{if(!document.body.contains(mapEl)){clearInterval(routeTimer);return}dash=(dash+1)%17;route.setStyle({dashOffset:String(-dash)})},100);
+  mapLayers[id]={user,accuracy,risk,route};
+}
+function initMaps(){['dashMap','liveMap','walkMap','safetyMap'].forEach(id=>{const el=document.getElementById(id);if(el&&el.offsetParent!==null)initMap(id)})}
+/* SOS flow: open modal -> request a FRESH GPS fix while the 5s countdown runs ->
+   countdown reaching 0 (or "Activate now") activates SOS; Cancel aborts it.
+   Prototype honesty: activation is recorded on this device only. Nothing is sent
+   to 911, SMS, police or trusted contacts. */
+let sosFixPromise=null;
+function setSosModalText(t){const el=document.getElementById('sosModalText');if(el)el.textContent=t}
+function openSOS(){
+  if(sosPending)return;
+  if(state.sos.active){toast('SOS is already active');page('sos',document.querySelectorAll('.nav button')[3]);return}
+  const token=++sosToken;sosPending=true;count=5;
+  document.getElementById('counter').textContent='05';
+  document.getElementById('sosModal').classList.add('show');
+  setSosModalText('SOS activates automatically when the countdown reaches zero. Press Cancel to stop it. Getting a fresh GPS position…');
+  sosFixPromise=getFreshPosition().then(f=>({ok:true,f}),reason=>({ok:false,reason}));
+  sosFixPromise.then(r=>{
+    if(token!==sosToken||!sosPending)return;
+    setSosModalText(r.ok?'GPS location confirmed (±'+Math.round(r.f.accuracy)+'m). SOS activates when the countdown ends — Cancel to stop it.':'Could not confirm your location ('+r.reason+'). SOS will still activate, but your location will be marked NOT CONFIRMED.');
+  });
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    if(token!==sosToken){clearInterval(timer);return}
+    count--;document.getElementById('counter').textContent=String(Math.max(0,count)).padStart(2,'0');
+    if(count<=0){clearInterval(timer);finalizeSOS(token)}
+  },1000);
+}
+function closeSOS(){
+  const wasPending=sosPending;
+  sosToken++;sosPending=false;clearInterval(timer);
+  document.getElementById('sosModal').classList.remove('show');
+  if(wasPending)toast('SOS cancelled — nothing was activated');
+}
+/* "Activate now": skip the rest of the countdown (still waits for the GPS attempt to finish). */
+function sendSOS(){if(sosPending)finalizeSOS(sosToken)}
+async function finalizeSOS(token){
+  if(token!==sosToken||!sosPending)return;
+  clearInterval(timer);
+  setSosModalText('Confirming your location…');
+  const r=await sosFixPromise;
+  if(token!==sosToken||!sosPending)return;   // cancelled or already activated while waiting
+  sosPending=false;sosToken++;
+  document.getElementById('sosModal').classList.remove('show');
+  const now=Date.now();
+  const loc=r.ok?{lat:r.f.lat,lon:r.f.lon,accuracy:r.f.accuracy,confirmed:true,at:now}:{confirmed:false,reason:r.reason,at:now};
+  state.sos={active:true,startedAt:now,location:loc,history:[{at:now,type:'activated',confirmed:loc.confirmed,lat:loc.lat??null,lon:loc.lon??null},...(state.sos.history||[])].slice(0,20)};
+  state.notifications.unshift({type:'red',title:'SOS activated',body:loc.confirmed?'Recorded on this device with a GPS-confirmed location. No one was contacted.':'Recorded on this device. Location could NOT be confirmed. No one was contacted.',time:'Just now'});
+  saveState();
+  startWatching('sos');
+  toast(loc.confirmed?'SOS active · location confirmed (±'+Math.round(loc.accuracy)+'m) · prototype: nobody is contacted':'SOS active · location could NOT be confirmed ('+loc.reason+') · prototype: nobody is contacted');
+  page('sos',document.querySelectorAll('.nav button')[3]);
+}
+function endSOS(){state.sos.active=false;state.sos.history.unshift({at:Date.now(),type:'resolved',lat:state.sos.location?.lat??null,lon:state.sos.location?.lon??null});saveState();stopWatching('sos');toast('SOS ended · local incident resolved')}
+function simulateNfc(){toast('NFC tap detected · opening SOS workflow');setTimeout(openSOS,450)}
+function openContactDialog(){document.getElementById('contactDialog').classList.add('show');setTimeout(()=>document.getElementById('contactName').focus(),50)}
+function closeContactDialog(){document.getElementById('contactDialog').classList.remove('show')}
+function addContact(){const name=document.getElementById('contactName').value.trim(),relation=document.getElementById('contactRelation').value.trim()||'Trusted contact';if(!name){toast('Enter a contact name');return}state.contacts.push({name,relation,online:false});state.notifications.unshift({type:'green',title:'Contact added',body:name+' added to your local network.',time:'Just now'});saveState();document.getElementById('contactName').value='';document.getElementById('contactRelation').value='';closeContactDialog();toast(name+' added to Trusted Network')}
+async function shareLocation(){const text='SafeTrack location: '+state.location.lat.toFixed(5)+', '+state.location.lon.toFixed(5);const url='https://www.google.com/maps?q='+state.location.lat+','+state.location.lon;if(navigator.share){try{await navigator.share({title:'SafeTrack location',text,url});toast('Location share sheet opened')}catch(e){}}else{try{await navigator.clipboard.writeText(url);toast('Location link copied')}catch(e){toast('Location: '+url)}}}
+/* ================= SafeWalk (walking navigation prototype) =================
+   One route object (activeRoute) + one navigation state object (nav).
+   Routes come from Valhalla (pedestrian) and are then checked against OpenStreetMap water
+   features before they are shown. The route is NOT calculated with safety data. */
+const SW={OFF_ROUTE_MIN_M:40,OFF_ROUTE_MAX_M:100,OFF_ROUTE_CONFIRM_MS:8000,OFF_ROUTE_MIN_FIXES:3,ARRIVE_M:20,GPS_STALE_MS:20000,LAST_KNOWN_MAX_MS:600000,
+  PREVIEW_ZOOM:17,NAV_ZOOM:18,USER_SCREEN_Y:0.68,FOLLOW_SLACK:0.2};
+const WATER={CORRIDOR_M:30,BRIDGE_M:10,MERGE_M:12,MAX_ROUNDS:3,EXCLUDE_RADIUS_M:40,MAX_QUERY_POINTS:300,DEADLINE_MS:70000};
+let activeRoute=null;      // {coords,cum,totalM,totalSec,steps,destination,origin,water}
+let lastDestination=null;  // {lat,lon,name} so we can recalculate without geocoding again
+let routeGroup=null, progressLine=null, navTick=null, lastGeocodeAt=0, swUser=null, swAccuracy=null, swInitDone=false;
+const nav={active:false,arrived:false,follow:false,offRoute:false,offFixes:0,offSince:0,lastAlong:0,hasFix:false,lastFixAt:0,busy:false,token:0,gpsDenied:false,zoomedIn:false,heading:null,lastPos:null,demoOptIn:false};
+
+class SWError extends Error{constructor(code,message){super(message);this.code=code}}
+const SW_MESSAGES={
+  not_found:"Couldn't find that place. Try adding the city, e.g. “SM Megamall, Mandaluyong”.",
+  geocode_unavailable:"Place search is unavailable right now. Check your connection and try again.",
+  no_route:"No walking route could be found between your location and that destination.",
+  routing_unavailable:"Routing is unavailable right now. Please try again in a moment.",
+  route_timeout:"Route calculation timed out. Check your connection and try again.",
+  invalid_route:"The routing service returned an unusable route. Please try again.",
+  unverified:"We couldn't verify a safe walking route. Every option we found appeared to cross water without a bridge.",
+  water_check_unavailable:"We couldn't verify a safe walking route. The map-data check is unavailable right now — please try again."
+};
+function swError(code,msg){return new SWError(code,msg||SW_MESSAGES[code]||SW_MESSAGES.routing_unavailable)}
+function showSafeWalkError(e){
+  if(e instanceof SWError){toast(e.message);return}
+  console.error('SafeWalk error:',e);
+  toast('Something went wrong while planning your route. Please try again.');
+}
+const sleepMs=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ---------- formatting ---------- */
+function formatDist(m){return m<1000?Math.round(m)+' m':(m/1000).toFixed(1)+' km'}
+function formatTime(sec){const min=Math.max(1,Math.round(sec/60));return min<60?min+' min':Math.floor(min/60)+' hr '+(min%60)+' min'}
+
+/* ---------- maneuvers (Valhalla maneuver types) ---------- */
+const MANEUVER={
+  1:['↑','Start walking'],2:['↑','Start walking'],3:['↑','Start walking'],
+  4:['⚑','Arrive at your destination'],5:['⚑','Arrive at your destination'],6:['⚑','Arrive at your destination'],
+  7:['↑','Continue'],8:['↑','Continue straight'],
+  9:['↗','Bear slightly right'],10:['→','Turn right'],11:['↘','Turn sharply right'],
+  12:['↪\uFE0E','Make a U-turn'],13:['↩\uFE0E','Make a U-turn'],
+  14:['↙','Turn sharply left'],15:['←','Turn left'],16:['↖','Bear slightly left'],
+  17:['↑','Continue straight'],18:['↗','Take the ramp on the right'],19:['↖','Take the ramp on the left'],
+  20:['↗','Take the exit on the right'],21:['↖','Take the exit on the left'],
+  22:['↑','Stay straight'],23:['↗','Keep right'],24:['↖','Keep left'],
+  25:['↑','Merge'],26:['↻','Enter the roundabout'],27:['↻','Exit the roundabout'],
+  37:['↗','Merge right'],38:['↖','Merge left']
+};
+function maneuverInfo(type){return MANEUVER[type]||['↑','Continue']}
+const isDepartType=t=>t===1||t===2||t===3;
+const isArriveType=t=>t===4||t===5||t===6;
+
+/* ---------- geometry ---------- */
+function geoDist(a,b){
+  const R=6371000,t=Math.PI/180,dLat=(b[0]-a[0])*t,dLon=(b[1]-a[1])*t;
+  const s=Math.sin(dLat/2)**2+Math.cos(a[0]*t)*Math.cos(b[0]*t)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(s)));
+}
+function bearing(a,b){
+  const t=Math.PI/180,dl=(b[1]-a[1])*t;
+  const y=Math.sin(dl)*Math.cos(b[0]*t),x=Math.cos(a[0]*t)*Math.sin(b[0]*t)-Math.sin(a[0]*t)*Math.cos(b[0]*t)*Math.cos(dl);
+  return (Math.atan2(y,x)/t+360)%360;
+}
+function routeBearingAt(segIdx){const c=activeRoute.coords,i=Math.max(0,Math.min(segIdx,c.length-2)),j=Math.min(c.length-1,i+3);return bearing(c[i],c[j])}
+function decodePolyline6(str){
+  let index=0,lat=0,lon=0,coords=[];
+  while(index<str.length){
+    let result=0,shift=0,b;
+    do{b=str.charCodeAt(index++)-63;result|=(b&31)<<shift;shift+=5}while(b>=32);
+    const dlat=result&1?~(result>>1):(result>>1);lat+=dlat;
+    result=0;shift=0;
+    do{b=str.charCodeAt(index++)-63;result|=(b&31)<<shift;shift+=5}while(b>=32);
+    const dlon=result&1?~(result>>1):(result>>1);lon+=dlon;
+    coords.push([lat/1e6,lon/1e6]);
+  }
+  return coords;
+}
+/* Decode + validate. Returns an array of [lat,lon] (>=2 points) or null if the shape is unusable. */
+function decodeRouteShape(shape){
+  if(typeof shape!=='string'||shape.length<4||!/^[\x3f-\x7e]+$/.test(shape))return null;
+  let coords;try{coords=decodePolyline6(shape)}catch(e){return null}
+  if(!Array.isArray(coords)||coords.length<2)return null;
+  for(const p of coords){if(!Number.isFinite(p[0])||!Number.isFinite(p[1])||Math.abs(p[0])>90||Math.abs(p[1])>180)return null}
+  return coords;
+}
+function cumulativeDistances(coords){const cum=[0];for(let i=1;i<coords.length;i++)cum.push(cum[i-1]+geoDist(coords[i-1],coords[i]));return cum}
+/* Nearest point on the route polyline, in metres, using a local flat-earth scale
+   (longitude shrunk by cos(lat)). Near-ties (out-and-back / looping routes) go to the candidate
+   nearest the previous progress, so progress doesn't jump. */
+function projectOnRoute(lat,lon,route,hintAlong,tol){
+  const coords=route.coords,cum=route.cum,M=111320,k=Math.cos(lat*Math.PI/180);
+  const cands=[];
+  for(let i=0;i<coords.length-1;i++){
+    const a=coords[i],b=coords[i+1];
+    const ax=(a[1]-lon)*M*k,ay=(a[0]-lat)*M,bx=(b[1]-lon)*M*k,by=(b[0]-lat)*M;
+    const dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;
+    let t=l2>0?-(ax*dx+ay*dy)/l2:0;t=Math.max(0,Math.min(1,t));
+    cands.push({d:Math.hypot(ax+t*dx,ay+t*dy),t,i,along:cum[i]+t*(cum[i+1]-cum[i])});
+  }
+  const choose=list=>{
+    let m=Infinity;for(const c of list)if(c.d<m)m=c.d;
+    const near=list.filter(c=>c.d<=m+6);
+    return hintAlong==null?near[0]:near.reduce((p,c)=>Math.abs(c.along-hintAlong)<Math.abs(p.along-hintAlong)?c:p,near[0]);
+  };
+  let pick=null;
+  if(hintAlong!=null){
+    const win=cands.filter(c=>c.along>=hintAlong-60&&c.along<=hintAlong+250);
+    if(win.length){const w=choose(win);if(w.d<=(tol==null?40:tol))pick=w}
+  }
+  if(!pick)pick=choose(cands);
+  const a=coords[pick.i],b=coords[pick.i+1];
+  return {dist:pick.d,along:pick.along,segIdx:pick.i,point:[a[0]+(b[0]-a[0])*pick.t,a[1]+(b[1]-a[1])*pick.t]};
+}
+
+/* ---------- steps ---------- */
+function buildSteps(maneuvers,cum,coordCount,totalM){
+  const out=[];let run=0;
+  (Array.isArray(maneuvers)?maneuvers:[]).forEach(m=>{
+    if(!m||typeof m!=='object'||m.type===0)return;
+    const lenM=Number.isFinite(m.length)?Math.max(0,m.length*1000):0;
+    const startDist=(Number.isInteger(m.begin_shape_index)&&m.begin_shape_index>=0&&m.begin_shape_index<coordCount)?cum[m.begin_shape_index]:run;
+    run+=lenM;
+    const info=maneuverInfo(m.type);
+    const street=Array.isArray(m.street_names)&&m.street_names[0]?String(m.street_names[0]):'';
+    const text=String(m.instruction||'').trim().replace(/\.$/,'')||(info[1]+(street&&!isArriveType(m.type)?' onto '+street:''));
+    out.push({type:m.type,icon:info[0],text,street,startDist,lengthM:lenM,isDepart:isDepartType(m.type),isArrive:isArriveType(m.type)});
+  });
+  if(!out.length||!out[out.length-1].isArrive){const i=maneuverInfo(4);out.push({type:4,icon:i[0],text:i[1],street:'',startDist:totalM,lengthM:0,isDepart:false,isArrive:true})}
+  return out;
+}
+/* Which maneuver to show, based on distance travelled along the route (not on percentage). */
+function stepContext(along){
+  const steps=activeRoute.steps;let cur=0;
+  for(let i=0;i<steps.length;i++){if(steps[i].startDist<=along+1)cur=i;else break}
+  let show=cur+1<steps.length?cur+1:cur;
+  if(cur===0&&along<15&&steps[0].isDepart)show=0;
+  return {cur,show,toManeuver:Math.max(0,steps[show].startDist-along)};
+}
+
+/* ---------- origin: real GPS only (demo only when the user explicitly opts in) ---------- */
+async function getSafeWalkOrigin(){
+  if(nav.demoOptIn)return {lat:demo[0],lon:demo[1],accuracy:null,source:'demo'};
+  const age=sessionFixAt?Date.now()-sessionFixAt:Infinity;
+  if(age<SW.GPS_STALE_MS)return {lat:state.location.lat,lon:state.location.lon,accuracy:state.location.accuracy,source:'gps',approx:gps.approx};
+  try{
+    const f=await acquireLocation({timeout:15000,allowCached:true});
+    return {lat:f.lat,lon:f.lon,accuracy:f.accuracy,source:'gps',approx:f.approx};
+  }catch(fail){
+    // A fix from earlier this session is still real data: use it, but say so.
+    if(sessionFixAt&&Date.now()-sessionFixAt<=SW.LAST_KNOWN_MAX_MS)return {lat:state.location.lat,lon:state.location.lon,accuracy:state.location.accuracy,source:'gps',stale:true,ageMs:Date.now()-sessionFixAt};
+    throw swError('gps_unavailable','Location unavailable. Allow location access to start SafeWalk. '+(fail&&fail.message?fail.message:''));
+  }
+}
+function useDemoLocation(){
+  nav.demoOptIn=true;
+  toast('DEMO LOCATION enabled — preview only. The start point is NOT your real position.');
+  renderSwGps();
+  const v=(document.getElementById('destination')?.value||'').trim();
+  if(v)calculateRoute();
+}
+function retrySafeWalkGps(){nav.demoOptIn=false;ensureSafeWalkLocation(true)}
+function ensureSafeWalkLocation(force){
+  const age=sessionFixAt?Date.now()-sessionFixAt:Infinity;
+  if(!force&&age<SW.GPS_STALE_MS)return;
+  acquireLocation({timeout:15000,allowCached:true}).catch(()=>{});   // outcome is shown by the GPS chip / panel
+  renderSwGps();
+}
+function enterSafeWalkView(){
+  if(location.protocol==='file:'&&!document.getElementById('swFileNote')){
+    document.querySelector('#navPlanner .planner-note')?.insertAdjacentHTML('afterend','<div class="planner-note" id="swFileNote" style="color:#ffc857"><span style="color:#ffc857">!</span>Opened as a local file: browsers may block location here. Serve this page from http://localhost or HTTPS for GPS to work.</div>');
+  }
+  renderSwGps();
+  if(!activeRoute&&!nav.active)ensureSafeWalkLocation(false);
+}
+/* GPS chip + "location unavailable" panel */
+function renderSwGps(){
+  const chip=document.getElementById('swGpsChip'),txt=document.getElementById('swGpsText'),panel=document.getElementById('swGpsMsg');
+  if(!chip||!txt)return;
+  const age=sessionFixAt?Date.now()-sessionFixAt:null;
+  const bad=['denied','timeout','unavailable','insecure','unsupported'].includes(gps.status);
+  let cls,label;
+  if(activeRoute&&activeRoute.origin.source==='demo'&&!nav.active){cls='demo';label='DEMO LOCATION'}
+  else if(nav.demoOptIn&&!activeRoute){cls='demo';label='DEMO LOCATION'}
+  else if(gps.status==='active'&&age!=null&&age<SW.GPS_STALE_MS){cls='ok';label='GPS ACTIVE'+(Number.isFinite(gps.accuracy)?' · ±'+Math.round(gps.accuracy)+' m':'')+(gps.approx?' · approx':'')}
+  else if(gps.status==='requesting'){cls='warn';label='LOCATING…'}
+  else if(nav.active&&sessionFixAt){cls='warn';label='GPS SIGNAL LOST'}
+  else if(bad&&!sessionFixAt){cls='bad';label='LOCATION UNAVAILABLE'}
+  else if(sessionFixAt){cls='warn';label='LAST FIX '+(age<60000?Math.round(age/1000)+'s':Math.round(age/60000)+'m')+' AGO'}
+  else{cls='idle';label='GPS OFF'}
+  chip.className='sw-gps '+cls;txt.textContent=label;
+  if(panel){
+    const show=!activeRoute&&!nav.active&&bad&&!sessionFixAt&&!nav.demoOptIn;
+    panel.style.display=show?'block':'none';
+    if(show){const t=panel.querySelector('p');if(t)t.textContent='Allow location access to start SafeWalk. '+gps.message}
+  }
+}
+setInterval(renderSwGps,3000);
+
+/* ---------- destination search (Nominatim) ---------- */
+const PLACE_ALIASES=[
+  [/^(ua\s*&\s*p|ua\s*and\s*p|u\.?a\.?p\.?|uap)$/i,'University of Asia and the Pacific, Pasig'],
+  [/^(sm\s+)?mega\s?mall$/i,'SM Megamall, Mandaluyong'],
+  [/^(bgc|bonifacio global city)$/i,'Bonifacio Global City, Taguig'],
+  [/^(moa|mall of asia|sm mall of asia)$/i,'SM Mall of Asia, Pasay'],
+  [/^sm\s*aura(\s+premier)?$/i,'SM Aura Premier, Taguig'],
+  [/^(up|u\.p\.)\s+diliman$/i,'University of the Philippines Diliman, Quezon City'],
+  [/^ateneo$/i,'Ateneo de Manila University, Quezon City'],
+  [/^greenbelt$/i,'Greenbelt, Makati'],
+  [/^trinoma$/i,'TriNoma, Quezon City']
+];
+function normalizeDestinationQuery(raw){
+  let q=String(raw==null?'':raw).replace(/[\u2018\u2019]/g,"'").replace(/\s+/g,' ').trim();
+  for(const [re,full] of PLACE_ALIASES)if(re.test(q))return full;
+  return q;
+}
+const inMetroManila=(la,lo)=>la>=14.35&&la<=14.85&&lo>=120.90&&lo<=121.20;
+async function fetchWithTimeout(url,opts,ms){
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),ms);
+  try{return await fetch(url,{...(opts||{}),signal:ctl.signal})}finally{clearTimeout(t)}
+}
+async function geocodeDestination(raw){
+  const q=normalizeDestinationQuery(raw);
+  if(!q)throw swError('not_found');
+  const base=/philippines/i.test(q)?q:q+', Philippines';
+  // OpenStreetMap often spells "&" where people type "and" (e.g. "University of Asia & the Pacific"), so also try the swapped form.
+  const swap=s=>/ and /i.test(s)?s.replace(/ and /gi,' & '):(/ & /.test(s)?s.replace(/ & /g,' and '):null);
+  const alt=swap(base);
+  const variants=[{q:base,bounded:true}];
+  if(alt)variants.push({q:alt,bounded:true});
+  variants.push({q:/metro manila/i.test(q)?base:q+' Metro Manila Philippines',bounded:true},{q:base,bounded:false});
+  if(alt)variants.push({q:alt,bounded:false});
+  const seen=new Set();let networkFailures=0,attempts=0;
+  for(const v of variants){
+    const key=v.q+'|'+v.bounded;if(seen.has(key))continue;seen.add(key);attempts++;
+    const wait=1100-(Date.now()-lastGeocodeAt);if(wait>0)await sleepMs(wait);   // Nominatim: max ~1 request/second
+    lastGeocodeAt=Date.now();
+    let data;
+    try{
+      const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=ph&accept-language=en&viewbox=120.90,14.85,121.20,14.35'+(v.bounded?'&bounded=1':'')+'&q='+encodeURIComponent(v.q);
+      const r=await fetchWithTimeout(url,{headers:{'Accept':'application/json'}},9000);
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      data=await r.json();
+    }catch(e){networkFailures++;continue}
+    if(!Array.isArray(data))continue;
+    const cands=data.map(x=>({lat:Number(x&&x.lat),lon:Number(x&&x.lon),display:String((x&&x.display_name)||'')}))
+      .filter(c=>Number.isFinite(c.lat)&&Number.isFinite(c.lon)&&Math.abs(c.lat)<=90&&Math.abs(c.lon)<=180);
+    if(!cands.length)continue;
+    const pick=cands.find(c=>inMetroManila(c.lat,c.lon))||cands[0];
+    const name=pick.display.split(',').slice(0,3).map(s=>s.trim()).filter(Boolean).join(', ')||String(raw).trim();
+    return {lat:pick.lat,lon:pick.lon,name};
+  }
+  throw swError(networkFailures>=attempts?'geocode_unavailable':'not_found');
+}
+
+/* ---------- routing (Valhalla pedestrian) ---------- */
+const ROUTER_ENDPOINTS=['https://valhalla1.openstreetmap.de/route','https://valhalla2.openstreetmap.de/route'];
+function validateTrip(parsed){
+  const trip=parsed&&parsed.trip;
+  if(!trip||!Array.isArray(trip.legs)||!trip.legs.length)return null;
+  const leg=trip.legs[0];
+  if(!leg||typeof leg.shape!=='string'||!leg.shape)return null;
+  const s=trip.summary||leg.summary;
+  if(!s||!Number.isFinite(s.length)||!Number.isFinite(s.time))return null;
+  return {trip,leg,summary:s};
+}
+/* One request round. Returns [main, ...alternates] (each {trip,leg,summary}); the main route must be valid. */
+async function requestRoutesOnce(origin,dest,extra){
+  extra=extra||{};
+  const payload={locations:[{lat:+origin.lat,lon:+origin.lon,type:'break'},{lat:+dest.lat,lon:+dest.lon,type:'break'}],costing:'pedestrian',units:'kilometers',directions_options:{units:'kilometers',language:'en-US'},id:'safetrack_'+Date.now()};
+  if(extra.alternates)payload.alternates=extra.alternates;
+  if(extra.excludes&&extra.excludes.length)payload.exclude_polygons=extra.excludes;
+  const attempts=[];
+  ROUTER_ENDPOINTS.forEach(u=>attempts.push({url:u,opts:{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}}));
+  ROUTER_ENDPOINTS.forEach(u=>attempts.push({url:u+'?json='+encodeURIComponent(JSON.stringify(payload)),opts:{mode:'cors'}}));   // legacy GET fallback
+  const deadline=Date.now()+30000;
+  let timeouts=0,server=0,invalid=0;
+  for(const a of attempts){
+    if(Date.now()>deadline){timeouts++;break}
+    try{
+      const res=await fetchWithTimeout(a.url,a.opts,9000);
+      const text=await res.text();
+      let parsed=null;try{parsed=JSON.parse(text)}catch(_){}
+      if(!res.ok){
+        if(parsed&&([171,442,154,155].includes(parsed.error_code)||/no path|no suitable edges/i.test(String(parsed.error||''))))throw swError('no_route');
+        server++;continue;
+      }
+      if(!parsed){invalid++;continue}
+      const main=validateTrip(parsed);
+      if(!main){invalid++;continue}
+      const out=[main];
+      if(Array.isArray(parsed.alternates))parsed.alternates.forEach(alt=>{const v=validateTrip(alt);if(v)out.push(v)});
+      return out;
+    }catch(e){
+      if(e instanceof SWError)throw e;
+      if(e&&e.name==='AbortError')timeouts++;else server++;
+    }
+  }
+  throw swError(timeouts&&!server&&!invalid?'route_timeout':(invalid&&!server&&!timeouts?'invalid_route':'routing_unavailable'));
+}
+async function requestWalkingRoutes(origin,dest,extra){
+  extra=extra||{};
+  try{return await requestRoutesOnce(origin,dest,extra)}
+  catch(e){
+    // The public server may not support alternates: retry the plain request. Exclusions have no plain fallback.
+    if(e instanceof SWError&&e.code!=='no_route'&&extra.alternates&&!(extra.excludes&&extra.excludes.length))return await requestRoutesOnce(origin,dest,{});
+    throw e;
+  }
+}
+
+/* ---------- water-crossing validation ----------
+   Valhalla can return routes that cross rivers/canals/lakes where OSM has a bad or missing
+   bridge mapping. Before a route is shown, its geometry is compared with OpenStreetMap water
+   features (Overpass API) along the route corridor:
+     - water boundaries / centrelines of rivers, canals, riverbanks, lakes, reservoirs, coastline
+     - legitimate crossings: bridge, tunnel, pier, man_made=bridge, ferry route within BRIDGE_M
+   A route crossing water without a legitimate crossing is rejected, and alternatives are requested.
+   If the check itself cannot run, the route is NOT shown (fail closed). It is a validation layer, not a guarantee. */
+const OVERPASS_ENDPOINTS=['https://overpass-api.de/api/interpreter','https://lz4.overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+const IGNORED_WATER=/^(pond|fountain|reflecting_pool|basin|wastewater|swimming_pool|stream_pool)$/;
+function simplifyForQuery(coords,maxPts){
+  if(coords.length<=maxPts)return coords;
+  const step=Math.ceil(coords.length/maxPts),out=[];
+  for(let i=0;i<coords.length;i+=step)out.push(coords[i]);
+  if(out[out.length-1]!==coords[coords.length-1])out.push(coords[coords.length-1]);
+  return out;
+}
+function parseWaterContext(elements){
+  const water=[],bridges=[];
+  const toPts=g=>Array.isArray(g)?g.filter(p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)).map(p=>[p.lat,p.lon]):[];
+  for(const el of elements||[]){
+    const t=el.tags||{};
+    const tunnel=t.tunnel&&t.tunnel!=='no',bridge=t.bridge&&t.bridge!=='no';
+    const isWaterway=/^(river|canal|riverbank)$/.test(t.waterway||'');
+    const isNaturalWater=t.natural==='water'||t.natural==='coastline';
+    if(el.type==='way'){
+      const pts=toPts(el.geometry);if(pts.length<2)continue;
+      if(isWaterway||isNaturalWater){
+        if(isWaterway&&tunnel)continue;                      // underground / culverted waterway: nothing to cross
+        if(t.natural==='water'&&IGNORED_WATER.test(t.water||''))continue;
+        water.push({pts,label:t.waterway||(t.natural==='coastline'?'coastline':(t.water||'water'))});
+      }else if(bridge||tunnel||/^(bridge|pier)$/.test(t.man_made||'')||t.route==='ferry')bridges.push(pts);
+    }else if(el.type==='relation'){
+      if(!(isNaturalWater||isWaterway))continue;
+      if(t.natural==='water'&&IGNORED_WATER.test(t.water||''))continue;
+      (el.members||[]).forEach(mem=>{const pts=toPts(mem.geometry);if(pts.length>=2)water.push({pts,label:t.water||t.waterway||'water'})});
+    }
+  }
+  return {water,bridges};
+}
+async function fetchWaterContext(coords,deadlineAt){
+  const pts=simplifyForQuery(coords,WATER.MAX_QUERY_POINTS);
+  const A='(around:'+WATER.CORRIDOR_M+','+pts.map(p=>p[0].toFixed(5)+','+p[1].toFixed(5)).join(',')+')';
+  const q='[out:json][timeout:25];('+
+    'way["waterway"~"^(river|canal|riverbank)$"]'+A+';'+
+    'way["natural"~"^(water|coastline)$"]'+A+';'+
+    'relation["natural"="water"]'+A+';'+
+    'relation["waterway"="riverbank"]'+A+';'+
+    'way["bridge"]["bridge"!="no"]'+A+';'+
+    'way["tunnel"]["tunnel"!="no"]'+A+';'+
+    'way["man_made"~"^(bridge|pier)$"]'+A+';'+
+    'way["route"="ferry"]'+A+';'+
+    ');out geom;';
+  const cacheKey=q;
+  if(waterCache.has(cacheKey))return waterCache.get(cacheKey);
+  let json=null;
+  for(let attempt=0;attempt<2&&!json;attempt++){      // public Overpass servers rate-limit: back off once and retry
+    try{json=await overpassQuery(q,deadlineAt)}
+    catch(e){if(deadlineAt&&Date.now()>deadlineAt)break;await sleepMs(2500)}
+  }
+  if(!json)throw swError('water_check_unavailable');
+  const ctx=parseWaterContext(json.elements);
+  waterCache.set(cacheKey,ctx);if(waterCache.size>6)waterCache.delete(waterCache.keys().next().value);
+  return ctx;
+}
+const waterCache=new Map();
+/* Public Overpass servers are often slow or rate-limited, so requests are "hedged": the next server is tried after a
+   few seconds (or immediately on failure) and the first valid answer wins. */
+function overpassQuery(q,deadlineAt){
+  return new Promise((resolve,reject)=>{
+    let finished=false,pending=0,next=0;const ctls=[],timers=[];
+    const done=(ok,val)=>{if(finished)return;finished=true;ctls.forEach(c=>c.abort());timers.forEach(clearTimeout);ok?resolve(val):reject(val)};
+    const launch=()=>{
+      if(finished||next>=OVERPASS_ENDPOINTS.length)return;
+      if(deadlineAt&&Date.now()>deadlineAt){if(!pending)done(false,new Error('deadline'));return}
+      const ep=OVERPASS_ENDPOINTS[next++],ctl=new AbortController();ctls.push(ctl);pending++;
+      const to=setTimeout(()=>ctl.abort(),22000);timers.push(to);
+      fetch(ep,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q),signal:ctl.signal})
+        .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+        .then(j=>{
+          if(!j||!Array.isArray(j.elements))throw new Error('bad response');
+          if(j.remark&&/runtime error|timed out|out of memory/i.test(String(j.remark)))throw new Error('partial result');
+          done(true,j);
+        })
+        .catch(()=>{})
+        .finally(()=>{pending--;if(finished)return;if(next<OVERPASS_ENDPOINTS.length)launch();else if(!pending)done(false,new Error('all Overpass servers failed'))});
+    };
+    launch();
+    timers.push(setTimeout(launch,4000),setTimeout(launch,8000));
+  });
+}
+function segIntersect(p1,p2,p3,p4){
+  const d1x=p2[0]-p1[0],d1y=p2[1]-p1[1],d2x=p4[0]-p3[0],d2y=p4[1]-p3[1];
+  const den=d1x*d2y-d1y*d2x;if(Math.abs(den)<1e-9)return null;
+  const t=((p3[0]-p1[0])*d2y-(p3[1]-p1[1])*d2x)/den,u=((p3[0]-p1[0])*d1y-(p3[1]-p1[1])*d1x)/den;
+  const e=1e-6;
+  if(t<=e||t>=1-e||u<=e||u>=1-e)return null;      // transversal crossings only (touching / endpoints are ignored)
+  return [p1[0]+t*d1x,p1[1]+t*d1y];
+}
+function ptSegDist(px,py,a,b){
+  const dx=b[0]-a[0],dy=b[1]-a[1],l2=dx*dx+dy*dy;
+  let t=l2>0?((px-a[0])*dx+(py-a[1])*dy)/l2:0;t=Math.max(0,Math.min(1,t));
+  return Math.hypot(px-(a[0]+t*dx),py-(a[1]+t*dy));
+}
+/* Returns {all:[...], bad:[...]}; each item {lat,lon,label,legit}. */
+function findWaterCrossings(coords,ctx){
+  const M=111320,ref=coords[0],k=Math.cos(ref[0]*Math.PI/180);
+  const xy=p=>[(p[1]-ref[1])*M*k,(p[0]-ref[0])*M];
+  const R=coords.map(xy),CELL=120,grid=new Map();
+  const cellsOf=(a,b,cell)=>{const out=[];const x0=Math.floor(Math.min(a[0],b[0])/cell),x1=Math.floor(Math.max(a[0],b[0])/cell),y0=Math.floor(Math.min(a[1],b[1])/cell),y1=Math.floor(Math.max(a[1],b[1])/cell);if((x1-x0+1)*(y1-y0+1)>4000)return out;for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++)out.push(x+','+y);return out};
+  for(let i=0;i<R.length-1;i++)for(const c of cellsOf(R[i],R[i+1],CELL)){let l=grid.get(c);if(!l)grid.set(c,l=[]);l.push(i)}
+  const BC=60,bgrid=new Map();
+  ctx.bridges.forEach(pts=>{const P=pts.map(xy);for(let j=0;j<P.length-1;j++)for(const c of cellsOf(P[j],P[j+1],BC)){let l=bgrid.get(c);if(!l)bgrid.set(c,l=[]);l.push([P[j],P[j+1]])}});
+  const found=[];
+  for(const w of ctx.water){
+    const W=w.pts.map(xy);
+    for(let j=0;j<W.length-1;j++){
+      const seen=new Set();
+      for(const c of cellsOf(W[j],W[j+1],CELL)){
+        const l=grid.get(c);if(!l)continue;
+        for(const i of l){if(seen.has(i))continue;seen.add(i);const pt=segIntersect(R[i],R[i+1],W[j],W[j+1]);if(pt)found.push({x:pt[0],y:pt[1],label:w.label})}
+      }
+    }
+  }
+  // merge crossings that are within a few metres of each other (centreline + two banks of one river)
+  const merged=[];
+  for(const f of found){if(!merged.some(m=>Math.hypot(m.x-f.x,m.y-f.y)<WATER.MERGE_M))merged.push(f)}
+  const all=merged.map(f=>{
+    let legit=false;
+    const cx=Math.floor(f.x/BC),cy=Math.floor(f.y/BC);
+    for(let dx=-1;dx<=1&&!legit;dx++)for(let dy=-1;dy<=1&&!legit;dy++){
+      const l=bgrid.get((cx+dx)+','+(cy+dy));if(!l)continue;
+      for(const [a,b] of l){if(ptSegDist(f.x,f.y,a,b)<=WATER.BRIDGE_M){legit=true;break}}
+    }
+    return {lat:ref[0]+f.y/M,lon:ref[1]+f.x/(M*k),label:f.label,legit};
+  });
+  return {all,bad:all.filter(c=>!c.legit)};
+}
+async function verifyRouteWater(coords,deadlineAt){
+  const ctx=await fetchWaterContext(coords,deadlineAt);
+  const r=findWaterCrossings(coords,ctx);
+  return {ok:r.bad.length===0,bad:r.bad,legit:r.all.length-r.bad.length,waterFeatures:ctx.water.length,bridgeFeatures:ctx.bridges.length};
+}
+function excludeOctagon(lat,lon,radiusM){
+  const ring=[],M=111320,k=Math.cos(lat*Math.PI/180);
+  for(let i=0;i<8;i++){const a=i*Math.PI/4;ring.push([+(lon+radiusM*Math.cos(a)/(M*k)).toFixed(6),+(lat+radiusM*Math.sin(a)/M).toFixed(6)])}
+  ring.push(ring[0]);
+  return ring;
+}
+/* Find a route that passes the water check: main route first, then alternates, then re-routes avoiding the offending crossings. */
+async function findVerifiedRoute(origin,dest,isStale){
+  const deadlineAt=Date.now()+WATER.DEADLINE_MS;
+  const excludes=[];const badPts=[];
+  let checkedAny=false;
+  for(let round=0;round<WATER.MAX_ROUNDS;round++){
+    let routes;
+    try{routes=await requestWalkingRoutes(origin,dest,{alternates:round===0?2:1,excludes})}
+    catch(e){if(round===0)throw e;break}      // later rounds failing means "no alternative available"
+    if(isStale())return null;
+    let newBad=0;
+    for(const rr of routes){
+      if(Date.now()>deadlineAt)throw swError('water_check_unavailable');
+      const coords=decodeRouteShape(rr.leg.shape);if(!coords)continue;
+      const cum=cumulativeDistances(coords);if(!(cum[cum.length-1]>0))continue;
+      const verdict=await verifyRouteWater(coords,deadlineAt);
+      if(isStale())return null;
+      checkedAny=true;
+      if(verdict.ok)return {rr,coords,cum,verdict,round};
+      verdict.bad.forEach(b=>{if(!badPts.some(p=>geoDist([p.lat,p.lon],[b.lat,b.lon])<WATER.EXCLUDE_RADIUS_M)){badPts.push(b);excludes.push(excludeOctagon(b.lat,b.lon,WATER.EXCLUDE_RADIUS_M));newBad++}});
+    }
+    if(!newBad)break;
+    if(excludes.length>8)break;
+  }
+  throw swError(checkedAny?'unverified':'invalid_route');
+}
+
+/* ---------- map: tiles, marker, route layers ---------- */
+function initWalkMap(lat,lon){
+  const m=L.map('walkMap',{zoomControl:false,attributionControl:true}).setView([lat,lon],15);
+  maps.walkMap=m;mapLayers.walkMap={};
+  m.on('dragstart',()=>{if(nav.follow)setFollow(false)});   // 'dragstart' only fires for user drags, never for setView/panTo
+  addWalkBasemap(m);
+}
+/* Basemap: OpenFreeMap "positron" VECTOR tiles rendered with MapLibre GL inside Leaflet (so the route/markers stay Leaflet layers).
+   Vector rendering is sharp at any devicePixelRatio, with no scaled raster tiles. The light raster tile servers we checked
+   (e.g. CARTO) now require an API key, so they are not used. If WebGL/MapLibre/the style is unavailable the map falls back to
+   OpenStreetMap France raster tiles (standard colours, not retina). */
+const WALK_STYLE_URL='https://tiles.openfreemap.org/styles/positron';
+function walkRasterFallback(m,why){
+  if(m._swRaster)return;
+  m._swRaster=true;
+  if(m._swGl){try{m.removeLayer(m._swGl)}catch(e){}}
+  L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',{maxZoom:19,crossOrigin:true,attribution:'&copy; OpenStreetMap contributors · Tiles courtesy of <a href="https://www.openstreetmap.fr/" target="_blank" rel="noopener">OpenStreetMap France</a>'}).addTo(m);
+  console.warn('SafeWalk basemap fallback:',why);
+  toast('Using the fallback map style');
+}
+function tuneWalkStyle(style){
+  // Slightly stronger roads and a softly tinted water colour on top of positron, so streets stay readable close-up.
+  (style.layers||[]).forEach(l=>{
+    if(!l.paint)return;
+    if(l.id==='highway_minor')l.paint['line-color']='#c9cfd4';
+    if(l.id==='highway_path')l.paint['line-color']='#d3d8dc';
+    if(l.id==='water')l.paint['fill-color']='#cbd8df';
+  });
+  return style;
+}
+async function addWalkBasemap(m){
+  const hasGl=(()=>{try{const c=document.createElement('canvas');return !!(c.getContext('webgl2')||c.getContext('webgl'))}catch(e){return false}})();
+  if(!window.maplibregl||!L.maplibreGL||!hasGl){walkRasterFallback(m,'MapLibre/WebGL unavailable');return}
+  try{
+    const r=await fetch(WALK_STYLE_URL);
+    if(!r.ok)throw new Error('style HTTP '+r.status);
+    const style=tuneWalkStyle(await r.json());
+    const gl=L.maplibreGL({style,attribution:'<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> &copy; <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',interactive:false}).addTo(m);
+    m._swGl=gl;
+    const mgl=gl.getMaplibreMap&&gl.getMaplibreMap();
+    if(mgl){let errs=0;mgl.on('error',e=>{if(++errs===6&&!mgl.isStyleLoaded())walkRasterFallback(m,'style/tiles failed to load')})}
+  }catch(e){walkRasterFallback(m,e&&e.message||e)}
+}
+function updateWalkMapMarker(lat,lon,acc){
+  const m=maps.walkMap;if(!m)return;
+  if(!swUser){
+    swAccuracy=L.circle([lat,lon],{radius:acc||30,color:'#1a73e8',weight:1,opacity:.45,fillColor:'#1a73e8',fillOpacity:.1,interactive:false}).addTo(m);
+    swUser=L.marker([lat,lon],{icon:L.divIcon({className:'sw-me',html:'<div class="sw-me-cone"></div><div class="sw-me-dot"></div>',iconSize:[44,44],iconAnchor:[22,22]}),interactive:false,keyboard:false,zIndexOffset:1000}).addTo(m);
+  }else{swUser.setLatLng([lat,lon]);swAccuracy.setLatLng([lat,lon])}
+  swAccuracy.setRadius(Math.max(5,Math.min(acc||30,300)));
+  setMeHeading();
+}
+function setMeHeading(){
+  const el=swUser&&swUser.getElement&&swUser.getElement();if(!el)return;
+  const cone=el.querySelector('.sw-me-cone');if(!cone)return;
+  if(nav.heading==null){cone.style.display='none'}else{cone.style.display='block';cone.style.transform='rotate('+Math.round(nav.heading)+'deg)'}
+}
+function clearRouteLayers(){if(routeGroup){routeGroup.remove();routeGroup=null}progressLine=null}
+function drawRoute(r){
+  clearRouteLayers();
+  const m=maps.walkMap;if(!m)return;
+  const g=L.layerGroup().addTo(m);
+  L.polyline(r.coords,{color:'#ffffff',weight:11,opacity:.95,lineCap:'round',lineJoin:'round',interactive:false}).addTo(g);        // casing
+  L.polyline(r.coords,{color:'#1a73e8',weight:7,opacity:1,lineCap:'round',lineJoin:'round',interactive:false}).addTo(g);          // the route
+  progressLine=L.polyline([r.coords[0]],{color:'#9aa8b8',weight:7,opacity:.95,lineCap:'round',lineJoin:'round',interactive:false}).addTo(g);   // already walked
+  L.marker([r.destination.lat,r.destination.lon],{icon:L.divIcon({className:'sw-dest',html:'<span>⚑</span>',iconSize:[34,34],iconAnchor:[17,30]}),keyboard:false}).addTo(g).bindPopup('<b>'+esc(r.destination.name)+'</b>');
+  if(r.origin.source==='demo')L.circleMarker([r.origin.lat,r.origin.lon],{radius:8,color:'#fff',weight:3,fillColor:'#ffc857',fillOpacity:1}).addTo(g).bindPopup('<b>DEMO LOCATION</b><br>Not your real position');
+  routeGroup=g;
+}
+function clearActiveRoute(){clearRouteLayers();activeRoute=null;lastDestination=null}
+
+/* ---------- navigation camera ----------
+   The camera keeps the user in the lower-middle of the *visible* map area (below the top card, above the
+   bottom panel), with more map ahead of the direction of travel. It only moves when the user drifts away
+   from that spot, never on every GPS tick. The map is never rotated. */
+function overlayInsets(){
+  const m=maps.walkMap,r=m.getContainer().getBoundingClientRect();
+  const top=document.getElementById('navTopCard').getBoundingClientRect();
+  const topIn=Math.max(0,top.bottom-r.top)+10;
+  let bot=null;
+  const panel=document.getElementById('navBottomPanel'),planner=document.getElementById('navPlanner');
+  if(activeRoute&&panel&&panel.style.display!=='none')bot=panel;else if(planner&&!planner.classList.contains('hidden'))bot=planner;
+  const botIn=bot?Math.max(0,r.bottom-bot.getBoundingClientRect().top)+10:0;
+  return {top:topIn,bottom:botIn,w:r.width,h:r.height};
+}
+function userTarget(ins,heading){
+  const visH=Math.max(ins.h-ins.top-ins.bottom,ins.h*0.3);
+  let x=ins.w/2,y=ins.top+visH*SW.USER_SCREEN_Y;
+  if(heading!=null){const k=0.1*Math.min(ins.w,visH),rad=heading*Math.PI/180;x-=Math.sin(rad)*k;y+=Math.cos(rad)*k}
+  return {x:Math.max(30,Math.min(ins.w-30,x)),y:Math.max(30,Math.min(ins.h-30,y))};
+}
+function cameraCenter(lat,lon,zoom,heading){
+  const m=maps.walkMap,ins=overlayInsets(),T=userTarget(ins,heading),U=m.project([lat,lon],zoom);
+  return m.unproject(L.point(U.x+(ins.w/2-T.x),U.y+(ins.h/2-T.y)),zoom);
+}
+function cameraTo(lat,lon,o){
+  const m=maps.walkMap;if(!m)return;
+  o=o||{};
+  if(m.getContainer().offsetParent===null){m.setView([lat,lon],o.zoom||m.getZoom(),{animate:false});return}   // hidden map: no layout to measure
+  m.invalidateSize();
+  const z=o.zoom||m.getZoom(),h=o.heading===undefined?nav.heading:o.heading;
+  m.setView(cameraCenter(lat,lon,z,h),z,{animate:o.animate!==false});
+}
+function setFollow(on){
+  nav.follow=!!on;
+  document.querySelector('.nav-recenter')?.classList.toggle('on',nav.follow);
+}
+function followUser(lat,lon){
+  const m=maps.walkMap;if(!m||!nav.follow||m.getContainer().offsetParent===null)return;
+  if(!nav.zoomedIn){nav.zoomedIn=true;if(m.getZoom()<SW.NAV_ZOOM){cameraTo(lat,lon,{zoom:SW.NAV_ZOOM});return}}   // close-up once per navigation
+  const ins=overlayInsets(),T=userTarget(ins,nav.heading),P=m.latLngToContainerPoint([lat,lon]);
+  const visH=Math.max(ins.h-ins.top-ins.bottom,ins.h*0.3);
+  if(Math.hypot(P.x-T.x,P.y-T.y)>SW.FOLLOW_SLACK*Math.min(ins.w,visH))
+    m.panTo(cameraCenter(lat,lon,m.getZoom(),nav.heading),{animate:true,duration:.6,easeLinearity:.5});
+}
+function focusPreview(){
+  const r=activeRoute;if(!r)return;
+  const fresh=sessionFixAt&&Date.now()-sessionFixAt<SW.LAST_KNOWN_MAX_MS&&r.origin.source==='gps';
+  const lat=fresh?state.location.lat:r.coords[0][0],lon=fresh?state.location.lon:r.coords[0][1];
+  cameraTo(lat,lon,{zoom:SW.PREVIEW_ZOOM,animate:false,heading:routeBearingAt(0)});
+}
+function recenterSafeWalk(){
+  const m=maps.walkMap;if(!m)return;
+  const hasPos=!!sessionFixAt;
+  if(nav.active&&hasPos){
+    setFollow(true);nav.zoomedIn=true;
+    cameraTo(state.location.lat,state.location.lon,{zoom:Math.max(m.getZoom(),SW.NAV_ZOOM-1)});
+  }else if(hasPos&&!(activeRoute&&activeRoute.origin.source==='demo'))cameraTo(state.location.lat,state.location.lon,{zoom:Math.max(m.getZoom(),SW.PREVIEW_ZOOM),heading:activeRoute?routeBearingAt(0):null});
+  else if(activeRoute)focusPreview();
+  else{ensureSafeWalkLocation(true)}
+}
+
+/* ---------- calculate route ---------- */
+function setPlannerBusy(b){
+  nav.busy=b;
+  const go=document.getElementById('navGoBtn');if(go){go.disabled=b;go.textContent=b?'…':'Go'}
+  const inp=document.getElementById('destination');if(inp)inp.readOnly=b;
+}
+async function calculateRoute(opts){
+  opts=opts||{};
+  if(nav.busy)return;
+  let dest=opts.destination||null;
+  const raw=(document.getElementById('destination')?.value||'').trim();
+  if(!dest&&!raw){toast('Enter a destination first');return}
+  const myToken=++nav.token,stale=()=>myToken!==nav.token;
+  setPlannerBusy(true);
+  try{
+    if(!dest){toast('Finding destination…');dest=await geocodeDestination(raw)}
+    if(stale())return;
+    toast('Getting your location…');
+    const origin=await getSafeWalkOrigin();
+    if(stale())return;
+    toast('Building and checking walking route…');
+    const found=await findVerifiedRoute(origin,dest,stale);
+    if(!found||stale())return;
+    const {rr,coords,cum,verdict}=found,geomM=cum[cum.length-1];
+    const steps=buildSteps(rr.leg.maneuvers||rr.trip.maneuvers,cum,coords.length,geomM);
+    // From here on, replace the previous route/navigation state in one go.
+    if(nav.active)endNavigation({release:!opts.resume});
+    resetNavFlags();
+    activeRoute={coords,cum,totalM:geomM,totalSec:rr.summary.time,steps,destination:dest,origin,water:verdict};
+    lastDestination=dest;
+    drawRoute(activeRoute);
+    const di=document.getElementById('routeMetaDist'),ti=document.getElementById('routeMetaTime'),si=document.getElementById('routeMetaSteps'),vn=document.getElementById('routeVerifyNote');
+    if(di)di.textContent=formatDist(geomM);if(ti)ti.textContent=formatTime(rr.summary.time);if(si)si.textContent=String(Math.max(0,steps.length-1))+' maneuvers';
+    if(vn)vn.textContent='Checked against OpenStreetMap water features'+(verdict.legit?' ('+verdict.legit+' bridge/tunnel crossing'+(verdict.legit>1?'s':'')+' confirmed)':'')+(found.round>0?' · alternative route used':'')+'. This is a check on map data, not a guarantee of safety.';
+    enterSafeWalkNavigation();
+    renderSteps();
+    renderNavigation();
+    focusPreview();
+    if(origin.source==='demo')toast('DEMO LOCATION route — preview only. Allow location access to navigate.');
+    else toast('Walking route ready · '+formatDist(geomM)+' · '+formatTime(rr.summary.time)+(origin.stale?' · from your last known location':'')+(origin.approx?' · approximate location':''));
+    if(opts.resume&&origin.source==='gps'&&beginNavigation())toast('SafeWalk started · following your GPS position');
+  }catch(e){showSafeWalkError(e)}
+  finally{setPlannerBusy(false)}
+}
+function quickDestination(name){const input=document.getElementById('destination');if(input){input.value=name;calculateRoute()}}
+function enterSafeWalkNavigation(){
+  document.getElementById('navPlanner')?.classList.add('hidden');
+  document.getElementById('navTopCard')?.classList.add('active');
+  document.getElementById('navRouteBadge').style.display='flex';
+  document.getElementById('navBottomPanel').style.display='block';
+  const p=document.getElementById('swGpsMsg');if(p)p.style.display='none';
+}
+
+/* ---------- navigation state ---------- */
+function resetNavFlags(){
+  nav.arrived=false;nav.offRoute=false;nav.offFixes=0;nav.offSince=0;nav.lastAlong=0;nav.hasFix=false;nav.lastFixAt=0;nav.gpsDenied=false;nav.zoomedIn=false;nav.heading=null;nav.lastPos=null;
+}
+function beginNavigation(){
+  if(!activeRoute||activeRoute.origin.source!=='gps')return false;
+  resetNavFlags();
+  nav.active=true;
+  if(!startWatching('safewalk')){nav.active=false;renderNavigation();return false}
+  setFollow(true);
+  document.getElementById('safeWalkShell')?.classList.add('nav-following');
+  const fresh=sessionFixAt&&Date.now()-sessionFixAt<SW.GPS_STALE_MS;
+  if(fresh)onSafeWalkPosition(state.location.lat,state.location.lon,state.location.accuracy);
+  else acquireLocation({timeout:12000,allowCached:true}).catch(()=>{});     // quick first fix while the watch warms up
+  clearInterval(navTick);navTick=setInterval(renderNavigation,3000);          // refresh "GPS signal lost" status
+  renderNavigation();
+  return true;
+}
+function endNavigation(o){
+  o=o||{};
+  nav.active=false;setFollow(false);
+  clearInterval(navTick);navTick=null;
+  document.getElementById('safeWalkShell')?.classList.remove('nav-following');
+  if(o.release!==false)stopWatching('safewalk');
+}
+async function startRouteFollow(){
+  if(!activeRoute){toast('Plan a route first');return}
+  if(activeRoute.origin.source!=='gps'){
+    // Planned from the DEMO LOCATION: leave demo mode, get real GPS, and route again from it.
+    nav.demoOptIn=false;
+    await calculateRoute({destination:lastDestination,resume:true});
+    return;
+  }
+  // If GPS is stale, or the user is no longer near the planned start, re-plan from the current position first.
+  const age=sessionFixAt?Date.now()-sessionFixAt:Infinity;
+  const far=age<SW.GPS_STALE_MS&&geoDist([state.location.lat,state.location.lon],activeRoute.coords[0])>60;
+  if(age>=SW.GPS_STALE_MS||far){await calculateRoute({destination:lastDestination,resume:true});return}
+  if(beginNavigation())toast('SafeWalk started · following your GPS position');
+}
+function stopRouteFollow(){
+  endNavigation();
+  renderNavigation();
+}
+async function recalculateRoute(){
+  if(!lastDestination||nav.busy)return;
+  await calculateRoute({destination:lastDestination,resume:nav.active});
+}
+function exitSafeWalk(){
+  nav.token++;                         // abandon any calculation in flight
+  const hadRoute=!!activeRoute;
+  endNavigation();                     // releases the navigation GPS watch
+  clearActiveRoute();
+  resetNavFlags();nav.demoOptIn=false;
+  document.getElementById('safeWalkShell')?.classList.remove('nav-following');
+  document.getElementById('navPlanner')?.classList.remove('hidden');
+  document.getElementById('navRouteBadge').style.display='none';
+  document.getElementById('navBottomPanel').style.display='none';
+  document.getElementById('navTopCard')?.classList.remove('active');
+  const rs=document.getElementById('routeSteps');if(rs){rs.style.display='none';rs.innerHTML=''}
+  ['routeMetaDist','routeMetaTime','routeMetaSteps'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—'});
+  const vn=document.getElementById('routeVerifyNote');if(vn)vn.textContent='';
+  renderIdleNav();renderSwGps();
+  if(sessionFixAt)cameraTo(state.location.lat,state.location.lon,{zoom:SW.PREVIEW_ZOOM,animate:false,heading:null});
+  if(!hadRoute)page('dashboard',document.querySelector('.nav button'));   // back arrow from the empty planner leaves SafeWalk
+}
+function toggleRouteDrawer(){const d=document.getElementById('routeSteps');if(d&&activeRoute)d.style.display=d.style.display==='none'?'block':'none'}
+function onGpsDenied(){
+  if(!nav.active)return;
+  nav.gpsDenied=true;endNavigation({release:false});renderNavigation();
+}
+
+/* ---------- position updates while navigating ---------- */
+function onSafeWalkPosition(lat,lon,acc,extra){
+  if(nav.demoOptIn&&!activeRoute)nav.demoOptIn=false;     // a real fix ends demo mode for the planner
+  if(!nav.active||!activeRoute)return;
+  nav.hasFix=true;nav.lastFixAt=Date.now();
+  // heading: device heading when moving, else direction of recent movement, else route direction
+  if(extra&&Number.isFinite(extra.heading)&&Number.isFinite(extra.speed)&&extra.speed>0.7)nav.heading=extra.heading;
+  else if(nav.lastPos&&geoDist(nav.lastPos,[lat,lon])>=6){nav.heading=bearing(nav.lastPos,[lat,lon]);nav.lastPos=[lat,lon]}
+  else if(!nav.lastPos)nav.lastPos=[lat,lon];
+  if(Number.isFinite(acc)&&acc>150){followUser(lat,lon);renderNavigation();return}     // too imprecise to judge progress or off-route
+  const thr=Math.max(SW.OFF_ROUTE_MIN_M,Math.min(SW.OFF_ROUTE_MAX_M,(Number.isFinite(acc)?acc:0)*1.5+25));
+  const mp=projectOnRoute(lat,lon,activeRoute,nav.lastAlong,thr);
+  if(nav.heading==null)nav.heading=routeBearingAt(mp.segIdx);
+  setMeHeading();
+  if(mp.dist>thr){
+    // Possibly off route: don't advance progress; only declare it after several fixes over a few seconds.
+    nav.offFixes++;if(!nav.offSince)nav.offSince=Date.now();
+    if(!nav.offRoute&&nav.offFixes>=SW.OFF_ROUTE_MIN_FIXES&&Date.now()-nav.offSince>=SW.OFF_ROUTE_CONFIRM_MS){
+      nav.offRoute=true;toast("You're off the route — tap Recalculate to get a new one");
+    }
+  }else{
+    nav.offFixes=0;nav.offSince=0;
+    if(nav.offRoute&&mp.dist<=thr*0.8)nav.offRoute=false;
+    if(!nav.offRoute){
+      nav.lastAlong=mp.along;
+      if(progressLine)progressLine.setLatLngs(activeRoute.coords.slice(0,mp.segIdx+1).concat([mp.point]));
+      if(activeRoute.totalM-mp.along<=SW.ARRIVE_M){
+        nav.arrived=true;endNavigation();renderNavigation();toast('You have arrived');return;
+      }
+    }
+  }
+  followUser(lat,lon);
+  renderNavigation();
+}
+
+/* ---------- rendering ---------- */
+function setNavText(id,t){const el=document.getElementById(id);if(el)el.textContent=t}
+function setNavButtons({start,stop,recalc,recalcLabel}){
+  const s=document.getElementById('navStartBtn'),p=document.getElementById('navStopBtn'),r=document.getElementById('navRecalcBtn');
+  if(s)s.style.display=start?'block':'none';
+  if(p)p.style.display=stop?'block':'none';
+  if(r){r.style.display=recalc?'block':'none';if(recalcLabel)r.textContent=recalcLabel}
+}
+function renderIdleNav(){
+  setNavText('navTurnIcon','↑');setNavText('navInstruction','Choose a destination to start');setNavText('navSub','SafeWalk will build a real walking route');
+  setNavText('navTopSmall','WALKING ROUTE');setNavText('navLiveText','READY');setNavText('navRouteStatus','Ready');
+  setNavText('navDestination','Set a destination');setNavText('navEta','—');setNavText('navDistance','—');setNavText('navProgress','0%');
+  const bar=document.getElementById('navProgressBar');if(bar)bar.style.width='0%';
+  setNavText('navOriginLabel','—');
+  setNavButtons({start:true,stop:false,recalc:false});
+  setSteps(-1);
+}
+function renderNavigation(){
+  if(!activeRoute){return}
+  const r=activeRoute,total=r.totalM,secPerM=total>0?r.totalSec/total:0;
+  setNavText('navDestination',r.destination.name.split(',').slice(0,2).join(','));
+  const demoOrigin=r.origin.source!=='gps';
+  const originEl=document.getElementById('navOriginLabel');
+  if(originEl){originEl.textContent=demoOrigin?'DEMO':(r.origin.stale?'LAST FIX':'GPS');originEl.style.color=demoOrigin||r.origin.stale?'#ffc857':''}
+  let icon,main,sub,eta,dist,pct,status,live,small='WALKING ROUTE',stepIdx=-1;
+  const along=nav.lastAlong;
+  pct=nav.hasFix||nav.arrived?Math.max(0,Math.min(100,Math.round(along/total*100))):0;
+  if(nav.arrived){
+    icon='⚑';main='You have arrived';sub='You reached the end of the walking route';eta='ARRIVED';dist='0 m';pct=100;status='ARRIVED';live='DONE';
+    stepIdx=r.steps.length-1;
+    setNavButtons({start:true,stop:false,recalc:false});
+  }else if(nav.active&&nav.offRoute){
+    icon='⚠';main="You're off route";sub='Tap Recalculate for a new route from where you are';eta='—';dist='—';status='OFF ROUTE';live='OFF ROUTE';small='OFF ROUTE';
+    setNavButtons({start:false,stop:true,recalc:true,recalcLabel:'Recalculate'});
+  }else if(nav.active&&(!nav.hasFix||Date.now()-nav.lastFixAt>SW.GPS_STALE_MS)){
+    const lost=nav.hasFix;
+    icon='⌖';main=lost?'GPS signal lost':'Waiting for GPS…';sub=lost?'Showing your last valid position · still trying to reconnect':'Waiting for your first location fix';
+    const rem=Math.max(0,total-along);eta=nav.hasFix?formatTime(rem*secPerM):'—';dist=nav.hasFix?formatDist(rem):'—';status=lost?'GPS SIGNAL LOST':'WAITING FOR GPS';live=lost?'NO SIGNAL':'NO GPS';
+    stepIdx=nav.hasFix?stepContext(along).show:-1;
+    setNavButtons({start:false,stop:true,recalc:false});
+  }else if(nav.active){
+    const ctx=stepContext(along),st=r.steps[ctx.show],next=r.steps[ctx.show+1];
+    icon=st.icon;main=st.text;
+    sub=(ctx.show===0&&ctx.toManeuver<1?'Start now':(ctx.toManeuver<1?'Now':'In '+formatDist(ctx.toManeuver)))+(next&&!st.isArrive?' · then '+next.text:'');
+    const rem=Math.max(0,total-along);eta=formatTime(rem*secPerM);dist=formatDist(rem);status='GPS FOLLOWING';live='LIVE';stepIdx=ctx.show;
+    setNavButtons({start:false,stop:true,recalc:false});
+  }else{
+    // Preview (not navigating yet)
+    const st=r.steps[0];
+    icon=st.icon;main=nav.gpsDenied?'Location unavailable':st.text;
+    sub=nav.gpsDenied?'Allow location access, then press Start':(demoOrigin?'DEMO LOCATION · preview only':formatDist(total)+' · '+formatTime(r.totalSec)+' walking route');
+    eta=formatTime(r.totalSec);dist=formatDist(total);status=demoOrigin?'DEMO LOCATION':'PREVIEW';live=demoOrigin?'DEMO':'PREVIEW';stepIdx=-1;
+    const sb=document.getElementById('navStartBtn');if(sb)sb.textContent=demoOrigin?'▶ Use my GPS & start':'▶ Start SafeWalk';
+    setNavButtons({start:true,stop:false,recalc:false});
+  }
+  setNavText('navTurnIcon',icon);setNavText('navInstruction',main);setNavText('navSub',sub);setNavText('navTopSmall',small);
+  setNavText('navEta',eta);setNavText('navDistance',dist);setNavText('navProgress',pct+'%');
+  const bar=document.getElementById('navProgressBar');if(bar)bar.style.width=pct+'%';
+  setNavText('navRouteStatus',status);setNavText('navLiveText',live);
+  setSteps(stepIdx);
+  renderSwGps();
+}
+function renderSteps(){
+  const el=document.getElementById('routeSteps');if(!el||!activeRoute)return;
+  el.innerHTML='<div class="eyebrow">TURN-BY-TURN</div>'+activeRoute.steps.map((st,i)=>'<div class="route-step" data-step="'+i+'"><div class="route-step-num">'+esc(st.icon)+'</div><div><div class="route-step-text">'+esc(st.text)+'</div><div class="route-step-dist">'+(st.isArrive?'Destination':esc(formatDist(st.lengthM)))+'</div></div></div>').join('');
+}
+function setSteps(activeIdx){
+  document.querySelectorAll('#routeSteps .route-step').forEach(n=>{n.style.background=(+n.dataset.step===activeIdx)?'rgba(53,223,177,.08)':''});
+}
+function localSignIn(){const email=document.querySelector('#login input[type="text"],#login input:not([type])')?.value?.trim()||'demo@safetrack.local';const password=document.querySelector('#login input[type="password"]')?.value||'';if(!email||!password){toast('Enter an email and password for local preview');return}state.user.email=email;state.user.signedIn=true;saveState();toast('SafeTrack local session started');page('dashboard',document.querySelector('.nav button'));}
+function resetLocalDemo(){try{localStorage.removeItem(STORAGE_KEY)}catch(e){}location.reload()}
+renderState();initMaps();window.addEventListener('resize',()=>Object.values(maps).forEach(m=>m.invalidateSize()));window.addEventListener('beforeunload',()=>{if(watchId!==null)navigator.geolocation.clearWatch(watchId)});
+// If an SOS was genuinely active when the page was closed/reloaded, resume GPS tracking
+// (location.live was not restored, so nothing is watching until we start it here).
+if(state.sos.active){toast('SOS is still active — resuming GPS tracking');startWatching('sos')}
+</script>
+
+<script id="safetrack-motion-interactions">
+(function(){
+  // Stagger the initial reveal without changing layout or navigation.
+  function animateVisible(){
+    document.querySelectorAll('.card, .panel, .stat-card, .route-card, .contact-card, .map-card').forEach((el,i)=>{
+      if(!el.classList.contains('motion-in')){
+        el.classList.add('motion-in');
+        el.style.animationDelay = Math.min(i*35, 280)+'ms';
+      }
+    });
+  }
+  animateVisible();
+  const observer = new MutationObserver(()=>animateVisible());
+  observer.observe(document.body,{childList:true,subtree:true});
+  // Add a clear live cue to status labels that indicate active location.
+  document.querySelectorAll('[id*="gpsStatus"], .gps-status').forEach(el=>{
+    if(!el.querySelector('.live-indicator') && /live|sharing|active/i.test(el.textContent)){
+      el.insertAdjacentHTML('afterbegin','<span class="live-indicator" aria-hidden="true"></span>');
+    }
+  });
+  // Small visual feedback for NFC test areas and simulated tap controls.
+  document.querySelectorAll('[onclick*="simulateNfc"], [onclick*="NFC"], [data-nfc]').forEach(el=>{
+    el.classList.add('nfc-ripple');
+  });
+  // Respect keyboard users: Enter/Space can activate custom SOS surfaces.
+  document.querySelectorAll('#sosButton, .sos-button, [data-action="sos"]').forEach(el=>{
+    if(!el.hasAttribute('tabindex') && el.tagName!=='BUTTON' && el.tagName!=='A') el.tabIndex=0;
+    el.addEventListener('keydown',e=>{
+      if((e.key==='Enter'||e.key===' ') && el.tagName!=='BUTTON' && el.tagName!=='A'){
+        e.preventDefault(); el.click();
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
