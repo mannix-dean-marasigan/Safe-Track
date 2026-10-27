@@ -798,6 +798,12 @@ html,body{max-width:100%;overflow-x:hidden}
   html body .nav-turn-icon{width:42px;height:42px}
 }
 
+/* SOS quick actions */
+.sos-actions-box{display:grid;gap:12px;max-height:92vh;overflow:auto}
+.sos-bigbtn{display:block;width:100%;min-height:72px;padding:16px;border-radius:16px;border:2px solid #ff3b5c;background:#d6203f;color:#fff;text-align:center;text-decoration:none;font:inherit;cursor:pointer}
+.sos-bigbtn b{display:block;font-size:22px;letter-spacing:.03em}.sos-bigbtn small{display:block;margin-top:4px;font-size:12px;opacity:.92;line-height:1.4}
+.sos-bigbtn.share{background:#2a1218;color:#ffd0d8}
+.sos-action-status{margin:0;font-size:12px;line-height:1.5;color:#c3d3da}
 /* accounts / contacts / SOS alerts */
 body.auth-required .sidebar,body.auth-required .sos-fab,body.auth-required .functional-bar{display:none!important}
 body.auth-required main{margin-left:0!important;padding-bottom:24px!important}
@@ -995,6 +1001,14 @@ body.auth-required main{margin-left:0!important;padding-bottom:24px!important}
 
 <button class="sos-fab" onclick="openSOS()">SOS</button>
 <div class="toast" id="toast"></div>
+<!-- SOS quick actions: shown right after the countdown ends -->
+<div class="modal" id="sosActions" role="alertdialog" aria-label="SOS actions"><div class="modal-box sos-actions-box">
+<div class="ring">!</div><h2>SOS active</h2>
+<a class="sos-bigbtn call" id="sosCallBtn" href="tel:" onclick="sosCallClicked()"><b>📞 CALL NOW</b><small id="sosCallLabel"></small></a>
+<button class="sos-bigbtn share" id="sosShareBtn" type="button" onclick="sosShareClicked()"><b>📍 SHARE MY LOCATION</b><small id="sosShareNote"></small></button>
+<p class="sos-action-status" id="sosActionStatus" role="status"></p>
+<button class="btn full" type="button" onclick="sosActionsClose()">Done</button>
+</div></div>
 <div class="modal" id="sosModal"><div class="modal-box"><div class="ring">!</div><h2>Ready to activate SOS?</h2><p id="sosModalText">SOS activates automatically when the countdown reaches zero. Press Cancel to stop it.</p><div class="counter" id="counter">05</div><div class="modal-actions"><button class="btn" onclick="closeSOS()">Cancel</button><button class="btn danger" onclick="sendSOS()">Activate now</button></div></div></div>
 
 
@@ -1016,6 +1030,14 @@ let recenterPending=false;      // recenter maps once on the next fix (explicit 
 let gpsErrorShown=false, gpsFixAnnounced=false;
 let sosPending=false, sosToken=0;
 const STORAGE_KEY='safetrack_mvp_v1';
+/* ---- SOS quick-action settings (swap these for your demo) ---- */
+const HOTLINE_NUMBER='+15555550100';        // placeholder for testing (fictional number, NOT 911): replace with your hotline
+const HOTLINE_LABEL='Nearest Hotline';
+const SOS_COUNTDOWN_SECONDS=5;
+const TRUSTED_SMS_CONTACTS=[                 // demo contacts for the SMS / share-sheet feature: {name, number}
+  {name:'Trusted contact 1',number:'+15555550101'},
+  {name:'Trusted contact 2',number:'+15555550102'}
+];
 const defaultState={
   user:{name:'SafeTrack User',email:'',signedIn:false},
   contacts:[],   // filled from the server after sign-in; never saved in this browser
@@ -1286,8 +1308,8 @@ function setSosModalText(t){const el=document.getElementById('sosModalText');if(
 function openSOS(){
   if(sosPending)return;
   if(state.sos.active){toast('SOS is already active');page('sos',document.querySelectorAll('.nav button')[3]);return}
-  const token=++sosToken;sosPending=true;count=5;
-  document.getElementById('counter').textContent='05';
+  const token=++sosToken;sosPending=true;count=SOS_COUNTDOWN_SECONDS;
+  document.getElementById('counter').textContent=String(count).padStart(2,'0');
   document.getElementById('sosModal').classList.add('show');
   setSosModalText('SOS activates automatically when the countdown reaches zero. Press Cancel to stop it. Getting a fresh GPS position…');
   sosFixPromise=getFreshPosition().then(f=>({ok:true,f}),reason=>({ok:false,reason}));
@@ -1326,7 +1348,54 @@ async function finalizeSOS(token){
   startWatching('sos');sosDirty=false;sosKick();
   toast(loc.confirmed?'SOS active · location confirmed (±'+Math.round(loc.accuracy)+'m) · sending to your contacts…':'SOS active · location NOT confirmed ('+loc.reason+') · sending to your contacts…');
   page('sos',document.querySelectorAll('.nav button')[3]);
+  sosActionsShow(loc);
 }
+/* ===== SOS quick actions (1: CALL, 2: SHARE LOCATION, 3: NOTIFICATION) =====
+   A website cannot dial or send texts silently. Feature 1 tries to open the phone dialer automatically
+   (browsers often block that without a fresh tap) and always shows a big CALL NOW button as the fallback.
+   Feature 2 opens the share sheet / SMS app with the message prefilled: the user still taps Send.
+   Real automatic sending would need a backend (for example Twilio or Supabase) - not included here.
+   To disable a feature, remove its block below and its button in #sosActions. */
+let sosActionLoc=null,sosActionState={call:false,share:false};
+function sosMapsLink(loc){return loc&&loc.confirmed?'https://maps.google.com/?q='+loc.lat+','+loc.lon:null}
+function sosMessage(loc){const link=sosMapsLink(loc);return link?'SOS! My location: '+link:'SOS! I need help. My location could not be confirmed.'}
+function sosActionsShow(loc){
+  sosActionLoc=loc;sosActionState={call:false,share:false};
+  const m=document.getElementById('sosActions');if(!m)return;
+  document.getElementById('sosCallBtn').href='tel:'+HOTLINE_NUMBER;
+  document.getElementById('sosCallLabel').textContent=HOTLINE_LABEL+' · '+HOTLINE_NUMBER;
+  document.getElementById('sosShareNote').textContent=(sosMapsLink(loc)?'Shares your GPS location link':'Your GPS location could not be confirmed, so no map link can be shared')+' with '+TRUSTED_SMS_CONTACTS.map(c=>c.name).join(', ')+'.';
+  sosActionsStatus();m.classList.add('show');
+  // Feature 1 - attempt the call automatically; usually blocked without a fresh tap, so CALL NOW stays on screen.
+  try{window.location.href='tel:'+HOTLINE_NUMBER;sosActionState.call='attempted'}catch(e){}
+  sosActionsStatus();
+}
+function sosActionsStatus(){
+  const el=document.getElementById('sosActionStatus');if(!el)return;
+  const parts=[];
+  if(sosActionState.call==='attempted')parts.push('We tried to open your phone dialer. If nothing opened, tap CALL NOW.');
+  if(sosActionState.call===true)parts.push('Dialer opened for '+HOTLINE_LABEL+'. Press call in your phone app: SafeTrack cannot confirm the call connected.');
+  if(sosActionState.share===true)parts.push('Share / SMS screen opened with your location. Tap Send there: SafeTrack cannot confirm the message was delivered.');
+  if(!parts.length)parts.push('Nothing has been sent yet.');
+  el.textContent=parts.join(' ');
+  // Feature 3 - notification: only reports what actually happened on this device.
+  if(sosActionState.call===true&&sosActionState.share===true){
+    const t='Dialer and share screen opened. Finish the call and tap Send so your hotline and trusted contacts get your location.';
+    toast(t);
+    try{if('Notification' in window&&Notification.permission==='granted')new Notification('SafeTrack SOS',{body:t})}catch(e){}
+  }
+}
+function sosCallClicked(){sosActionState.call=true;sosActionsStatus()}   // the <a href="tel:"> performs the navigation itself (a real tap)
+async function sosShareClicked(){
+  const msg=sosMessage(sosActionLoc);let done=false;
+  if(navigator.share){try{await navigator.share({title:'SafeTrack SOS',text:msg});done=true}catch(e){if(e&&e.name==='AbortError'){toast('Share cancelled');return}}}
+  if(!done){
+    const nums=TRUSTED_SMS_CONTACTS.map(c=>c.number).join(',');
+    window.location.href='sms:'+nums+(/iPhone|iPad|iPod/i.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(msg);
+  }
+  sosActionState.share=true;sosActionsStatus();
+}
+function sosActionsClose(){document.getElementById('sosActions').classList.remove('show')}
 function endSOS(){const id=state.sos.alertId;state.sos.active=false;state.sos.alertId=null;state.sos.delivery=null;state.sos.pendingEndId=id||null;sosPendingEnd=id||null;state.sos.history.unshift({at:Date.now(),type:'resolved'});saveState();stopWatching('sos');if(id)sosKick();renderSosPins();toast(id?'SOS ended · telling your contacts it is over':'SOS ended')}
 function simulateNfc(){toast('NFC tap detected · opening SOS workflow');setTimeout(openSOS,450)}
 async function shareLocation(){
