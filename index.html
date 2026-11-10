@@ -798,6 +798,17 @@ html,body{max-width:100%;overflow-x:hidden}
   html body .nav-turn-icon{width:42px;height:42px}
 }
 
+/* quick commands, feedback, terms, bigger SOS */
+.quick-cmds{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 16px}
+.qc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:88px;padding:12px 8px;border-radius:16px;border:1px solid #1d4254;background:rgba(9,24,33,.9);color:#e8f3f7;font:inherit;font-weight:700;font-size:12px;line-height:1.25;text-align:center;cursor:pointer}
+.qc b{font-size:24px;line-height:1}.qc:hover{border-color:var(--green)}.qc:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.qc-sos{grid-column:1/-1;min-height:96px;flex-direction:row;gap:14px;background:linear-gradient(135deg,#d6203f,#ff4d68);border-color:#ff8da1;color:#fff;font-size:17px;letter-spacing:.02em}.qc-sos b{font-size:34px}
+@media(min-width:900px){.quick-cmds{grid-template-columns:repeat(6,1fr)}.qc-sos{grid-column:auto;flex-direction:column;min-height:88px;font-size:12px}.qc-sos b{font-size:24px}}
+html body:not(.sw-page) .sos-fab{width:88px;height:88px;font-size:22px}
+@media(max-width:650px){html body .sidebar .nav{grid-template-columns:repeat(8,minmax(0,1fr))}html body .sidebar .nav button span{font-size:8px;letter-spacing:-.4px}html body.sw-page .sos-fab{width:56px;height:56px}html body:not(.sw-page) .sos-fab{width:76px;height:76px;font-size:19px}}
+.terms-row{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:12px;line-height:1.5;color:#c3d3da}.terms-row input{width:20px;height:20px;margin-top:2px;flex:none}.terms-row .linkbtn{padding:0;min-height:0;text-decoration:underline}
+.fb-row{padding:12px 0;border-bottom:1px solid #15303c}.fb-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.fb-row p{margin:6px 0;line-height:1.5;white-space:pre-wrap;word-break:break-word}.fb-row small{color:#8ca1ab}
+#fbMessage,#fbCategory{width:100%;box-sizing:border-box;font:inherit}
 /* SOS quick actions */
 .sos-actions-box{display:grid;gap:12px;max-height:92vh;overflow:auto}
 .sos-bigbtn{display:block;width:100%;min-height:72px;padding:16px;border-radius:16px;border:2px solid #ff3b5c;background:#d6203f;color:#fff;text-align:center;text-decoration:none;font:inherit;cursor:pointer}
@@ -838,6 +849,7 @@ body.auth-required main{margin-left:0!important;padding-bottom:24px!important}
 <button onclick="page('network',this)">♧ <span>Trusted Network</span><i id="netBadge" class="nbadge" hidden>0</i></button>
 <button onclick="page('nfc',this)">⌁ <span>NFC Card</span></button>
 <button onclick="page('safety',this)">◌ <span>Safety Intel</span></button>
+<button onclick="page('feedback',this);refreshFeedback()">✎ <span>Feedback</span></button>
 </nav>
 <div class="profile"><div class="avatar">S</div><div><b style="font-size:11px">SafeTrack User</b><br><span class="muted">Not signed in</span></div></div>
 </aside>
@@ -846,6 +858,14 @@ body.auth-required main{margin-left:0!important;padding-bottom:24px!important}
 <div class="functional-bar"><span class="live-indicator"></span><span>LOCAL FUNCTIONAL MODE</span><b id="appStateLabel">Ready</b><span>· Data persists in this browser until connected to Supabase.</span></div>
 <section id="dashboard" class="page active">
 <div class="top"><div><div class="eyebrow">Personal safety network</div><div class="title">You're protected.</div><div class="subtitle">Your safety network is ready. Check your area, stay connected, and get help fast.</div></div><div class="actions"><div class="global-status" id="globalSafetyStatus"><span class="status-dot"></span><span><small>SAFETY STATUS</small><b>SAFE</b></span></div><div class="pill"><span class="dot"></span>GPS <b id="gpsStatus">Demo ready</b></div><button class="btn" onclick="locate()">Use my location</button></div></div>
+<div class="quick-cmds" role="group" aria-label="Emergency quick commands">
+  <button class="qc qc-sos" onclick="openSOS()"><b>🆘</b><span>SOS Emergency Alert</span></button>
+  <button class="qc" onclick="quickCall()"><b>📞</b><span>Call Emergency Hotline</span></button>
+  <button class="qc" onclick="shareLocation()"><b>📍</b><span>Share My Location</span></button>
+  <button class="qc" onclick="notifyCompanions()"><b>💬</b><span>Notify Selected Companions</span></button>
+  <button class="qc" onclick="gotoPage('network')"><b>👥</b><span>View Emergency Contacts</span></button>
+  <button class="qc" onclick="viewMyLocation()"><b>🧭</b><span>View My Current Location</span></button>
+</div>
 <div class="safety-briefing">
   <div class="brief-icon">✓</div>
   <div class="brief-copy">
@@ -981,17 +1001,25 @@ body.auth-required main{margin-left:0!important;padding-bottom:24px!important}
   </div>
   <button class="btn" onclick="signOutUser()">Sign out</button>
 </div>
+<div class="card pad" style="margin-top:16px"><h3 style="font:700 16px 'Space Grotesk';margin:0">Where you are (building details)</h3><p class="muted">GPS can't tell which floor or unit you're in. Enter it here once; it is sent to your trusted contacts with every SOS.</p><div class="form-grid"><div class="field"><label for="pf_building">BUILDING NAME</label><input id="pf_building" maxlength="120" autocomplete="off"></div><div class="field"><label for="pf_floor">FLOOR</label><input id="pf_floor" maxlength="20" autocomplete="off"></div><div class="field"><label for="pf_unit">ROOM / UNIT</label><input id="pf_unit" maxlength="40" autocomplete="off"></div><div class="field"><label for="pf_details">OTHER DETAILS</label><input id="pf_details" maxlength="300" placeholder="e.g. Tower B, near elevator" autocomplete="off"></div></div><button class="btn primary" type="button" onclick="saveLocationDetails()">Save details</button></div>
 <div class="card pad" style="margin-top:16px"><h3 style="font:700 16px 'Space Grotesk';margin:0">Your account</h3><p class="muted" id="acctInfo">Not signed in</p><button class="btn" style="margin-top:6px" onclick="signOutUser()">Sign out</button></div></section>
 
-<section id="nfc" class="page"><div class="top"><div><div class="eyebrow">Hardware trigger</div><div class="title">SafeTrack NFC Card</div></div><div class="pill"><span class="dot"></span>Card ready</div></div><div class="nfc-page"><div class="card hero-card"><div class="big-nfc"><div class="symbol">⌁</div><strong>SAFETRACK</strong><small>CARD #083A</small></div><button class="btn primary" onclick="simulateNfc()">Simulate NFC tap</button></div><div class="card panel"><h2>Tap. Confirm. Get help.</h2><p>The physical NFC card is designed to be a fast shortcut into the emergency workflow. A real tag can store a unique HTTPS URL tied to a secure card token.</p><div class="steps"><div class="step"><div class="step-num">1</div><div><b>Tap your NFC card</b><p>Phone opens the SafeTrack emergency URL.</p></div></div><div class="step"><div class="step-num">2</div><div><b>Confirm SOS</b><p>Prevent accidental taps with a short confirmation flow.</p></div></div><div class="step"><div class="step-num">3</div><div><b>Location starts sharing</b><p>GPS position is sent to the authorized safety network.</p></div></div><div class="step"><div class="step-num">4</div><div><b>Trusted network is notified</b><p>Family and selected contacts receive a secure tracking link.</p></div></div></div><div class="option" style="margin-top:18px"><div class="option-row"><b>Card status</b><span class="safe">Active</span></div><div class="muted">Secure token · Last tested today · Owner: You</div></div></div></div></section>
+<section id="nfc" class="page"><div class="top"><div><div class="eyebrow">Hardware trigger</div><div class="title">SafeTrack NFC Card</div></div><div class="pill" id="nfcPill"><span class="dot"></span>Card ready</div></div><div class="nfc-page"><div class="card hero-card"><div class="big-nfc"><div class="symbol">⌁</div><strong>SAFETRACK</strong><small>CARD #083A</small></div><button class="btn primary" onclick="simulateNfc()">Simulate NFC tap</button><p class="muted" style="font-size:11px;margin:10px 0 0">A tap only asks you to confirm; it never starts an alert by itself.</p></div><div class="card panel"><h2>Tap. Confirm. Get help.</h2><p>The physical NFC card is designed to be a fast shortcut into the emergency workflow. A real tag can store a unique HTTPS URL tied to a secure card token.</p><div class="steps"><div class="step"><div class="step-num">1</div><div><b>Tap your NFC card</b><p>Phone opens the SafeTrack emergency URL.</p></div></div><div class="step"><div class="step-num">2</div><div><b>Confirm SOS</b><p>Prevent accidental taps with a short confirmation flow.</p></div></div><div class="step"><div class="step-num">3</div><div><b>Location starts sharing</b><p>GPS position is sent to the authorized safety network.</p></div></div><div class="step"><div class="step-num">4</div><div><b>Trusted network is notified</b><p>Family and selected contacts receive a secure tracking link.</p></div></div></div><div class="option" style="margin-top:18px"><div class="option-row"><b>Card status</b><span id="nfcStatus" class="safe">Active</span></div><div class="muted">Only the account owner can change this. A disabled card is refused by the server.</div><button class="btn danger full" id="nfcToggle" type="button" onclick="toggleNfc()" style="margin-top:12px">Disable NFC card</button></div></div></div></section>
 
 <section id="safety" class="page"><div class="top"><div><div class="eyebrow">Risk intelligence</div><div class="title">Safety Intelligence</div></div><div class="pill">Illustrative dataset · Last 30 days</div></div><div class="section-grid"><div class="card wide-map"><div id="safetyMap" class="map"></div></div><div class="card panel"><h2>Area insight</h2><p>SafeTrack can aggregate verified incident reports and other approved data sources into a time-aware safety signal.</p><div class="option"><div class="option-row"><b>Current area</b><span class="warn">Moderate</span></div><p class="muted">Illustrative activity level. Not a statement that an area is objectively dangerous.</p></div><div class="option"><div class="option-row"><b>Evening signal</b><span class="danger-t">Elevated</span></div><p class="muted">Example: higher report density during selected evening hours.</p></div><div class="option"><div class="option-row"><b>Nearby safe places</b><span class="safe">4</span></div><p class="muted">Hospitals, police facilities and verified safe locations can be displayed here.</p></div><h3 style="font-size:12px;margin-top:24px">Risk scale</h3><div class="riskbar"></div><div class="scale"><span>Lower</span><span>Moderate</span><span>Elevated</span></div></div></div></section>
+
+<section id="feedback" class="page"><div class="top"><div><div class="eyebrow">We're listening</div><div class="title">Feedback &amp; Complaints</div></div></div>
+<div class="card pad"><div class="field"><label for="fbCategory">CATEGORY</label><select id="fbCategory"><option value="feedback">Feedback</option><option value="complaint">Complaint</option><option value="technical">Technical problem</option><option value="suggestion">Suggestion</option></select></div>
+<div class="field"><label for="fbMessage">WHAT HAPPENED?</label><textarea id="fbMessage" rows="5" maxlength="2000" placeholder="Describe your feedback, complaint or the problem you ran into"></textarea></div>
+<button class="btn primary" id="fbSubmit" type="button" onclick="submitFeedback()">Submit</button></div>
+<div class="card pad" style="margin-top:16px"><h3 style="font:700 16px 'Space Grotesk';margin:0">Submissions</h3><p class="muted" id="feedbackAdminNote" hidden>You are an administrator: all submissions are shown and you can change their status.</p><div id="feedbackList"></div></div></section>
 
 <section id="login" class="page"><div style="padding-top:30px"><div class="card auth-card"><div class="auth-art"><div class="brand"><div class="brandmark">✦</div><span>SafeTrack</span></div><div><h2>Your safety, connected.</h2><p>Create an account, add the people you trust, and send them an SOS with your live location.</p></div></div>
 <form class="auth-form" id="authForm" onsubmit="return submitAuth(event)" novalidate><div class="eyebrow" id="authEyebrow">Welcome back</div><h2 id="authTitle">Sign in</h2>
 <div class="field" id="authNameField" style="display:none"><label for="authName">YOUR NAME</label><input id="authName" autocomplete="name" placeholder="e.g. Alex Cruz"></div>
 <div class="field"><label for="authEmail">EMAIL</label><input id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com"></div>
 <div class="field"><label for="authPassword">PASSWORD</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="At least 8 characters"></div>
+<label class="terms-row" id="authTermsField" style="display:none"><input type="checkbox" id="authTerms"> <span>I agree to the <button type="button" class="linkbtn" onclick="openTerms()">Terms and Conditions</button> and Privacy Policy.</span></label>
 <div id="authError" class="auth-msg bad" role="alert" hidden></div>
 <button class="btn primary full" id="authSubmit" type="submit">Sign in</button>
 <div class="auth-switch"><span id="authSwitchText">New to SafeTrack?</span> <button type="button" class="linkbtn" id="authSwitchBtn" onclick="setAuthMode(authMode==='signin'?'signup':'signin')">Create account</button></div>
@@ -1012,6 +1040,14 @@ body.auth-required main{margin-left:0!important;padding-bottom:24px!important}
 <div class="modal" id="sosModal"><div class="modal-box"><div class="ring">!</div><h2>Ready to activate SOS?</h2><p id="sosModalText">SOS activates automatically when the countdown reaches zero. Press Cancel to stop it.</p><div class="counter" id="counter">05</div><div class="modal-actions"><button class="btn" onclick="closeSOS()">Cancel</button><button class="btn danger" onclick="sendSOS()">Activate now</button></div></div></div>
 
 
+<div class="dialog" id="termsDialog"><div class="dialog-box inc-box"><div class="eyebrow">Version 2026-11-10</div><h3>Terms and Conditions &amp; Privacy Policy</h3>
+<p><b>What SafeTrack is.</b> A personal-safety tool that alerts people you trust. It does not contact police or emergency services; call them yourself in an emergency. It may fail (no signal, GPS error, phone settings), so never rely on it alone.</p>
+<p><b>What we collect.</b> Your name, email, a password (stored only as a salted hash by our authentication provider), your trusted contacts, optional building/floor/unit details, your NFC card status, feedback you submit, and your location only while you trigger an SOS or use location features.</p>
+<p><b>Who sees it.</b> Your accepted contacts see your name, exact live location and building details during your SOS. Other SafeTrack users see only an approximate area (about 200 m) with no name. Nobody else can read your contacts, profile or history.</p>
+<p><b>Your choices.</b> You can remove contacts, end an SOS, disable your NFC card and ask for your data to be deleted. We record the version of these terms you agreed to and when.</p>
+<p><b>Acceptable use.</b> Do not send false alerts or misuse other people's information. We may suspend accounts that do.</p>
+<div class="dialog-actions"><button class="btn primary" onclick="closeTerms()">Close</button></div></div></div>
+<div class="dialog" id="nfcConfirm" role="alertdialog" aria-label="NFC card scanned"><div class="dialog-box"><div class="eyebrow danger-t">NFC CARD SCANNED</div><h3>Start an SOS?</h3><p>Your card was tapped. If this was accidental, choose Ignore. Nothing is sent until you confirm and the 5-second countdown ends.</p><div class="dialog-actions"><button class="btn" onclick="nfcConfirmAnswer(false)">Ignore</button><button class="btn danger" onclick="nfcConfirmAnswer(true)">Yes, start SOS</button></div></div></div>
 <div class="dialog" id="contactDialog"><div class="dialog-box"><div class="eyebrow">Trusted network</div><h3>Add a trusted contact</h3><p>Enter the email they used for their SafeTrack account. They must accept before they can receive your SOS.</p><div class="field"><label for="contactEmail">THEIR EMAIL</label><input id="contactEmail" type="email" inputmode="email" autocomplete="off" placeholder="friend@example.com" onkeydown="if(event.key==='Enter')addContact()"></div><div id="contactMsg" class="auth-msg bad" hidden></div><div class="dialog-actions"><button class="btn" onclick="closeContactDialog()">Close</button><button class="btn primary" id="contactSubmit" onclick="addContact()">Send request</button></div></div></div>
 <div class="dialog" id="incomingSos" role="alertdialog" aria-label="Incoming SOS"><div class="dialog-box inc-box"><div class="eyebrow danger-t">SOS ALERT</div><div id="incomingList"></div><div class="dialog-actions"><button class="btn" onclick="(document.getElementById('incomingSos').dataset.dismissedAll='1');closeIncoming()">Close</button></div></div></div>
 <button class="sos-strip" id="sosStrip" hidden onclick="openIncoming()"></button>
@@ -1326,7 +1362,7 @@ function openSOS(){
 }
 function closeSOS(){
   const wasPending=sosPending;
-  sosToken++;sosPending=false;clearInterval(timer);
+  sosToken++;sosPending=false;clearInterval(timer);sosSourcePending='button';
   document.getElementById('sosModal').classList.remove('show');
   if(wasPending)toast('SOS cancelled — nothing was activated');
 }
@@ -1338,7 +1374,7 @@ async function finalizeSOS(token){
   setSosModalText('Confirming your location…');
   const r=await sosFixPromise;
   if(token!==sosToken||!sosPending)return;   // cancelled or already activated while waiting
-  sosPending=false;sosToken++;
+  sosPending=false;sosToken++;sosLaunchSource=sosSourcePending;sosSourcePending='button';
   document.getElementById('sosModal').classList.remove('show');
   const now=Date.now();
   const loc=r.ok?{lat:r.f.lat,lon:r.f.lon,accuracy:r.f.accuracy,confirmed:true,at:now}:{confirmed:false,reason:r.reason,at:now};
@@ -1358,7 +1394,7 @@ async function finalizeSOS(token){
    To disable a feature, remove its block below and its button in #sosActions. */
 let sosActionLoc=null,sosActionState={call:false,share:false};
 function sosMapsLink(loc){return loc&&loc.confirmed?'https://maps.google.com/?q='+loc.lat+','+loc.lon:null}
-function sosMessage(loc){const link=sosMapsLink(loc);return link?'SOS! My location: '+link:'SOS! I need help. My location could not be confirmed.'}
+function sosMessage(loc){const link=sosMapsLink(loc),d=locationDetailsText(MYPROFILE);return (link?'SOS! My location: '+link:'SOS! I need help. My location could not be confirmed.')+(d?' '+d+'.':'')+' ('+new Date().toLocaleString()+')'}
 function sosActionsShow(loc){
   sosActionLoc=loc;sosActionState={call:false,share:false};
   const m=document.getElementById('sosActions');if(!m)return;
@@ -1397,11 +1433,28 @@ async function sosShareClicked(){
 }
 function sosActionsClose(){document.getElementById('sosActions').classList.remove('show')}
 function endSOS(){const id=state.sos.alertId;state.sos.active=false;state.sos.alertId=null;state.sos.delivery=null;state.sos.pendingEndId=id||null;sosPendingEnd=id||null;state.sos.history.unshift({at:Date.now(),type:'resolved'});saveState();stopWatching('sos');if(id)sosKick();renderSosPins();toast(id?'SOS ended · telling your contacts it is over':'SOS ended')}
-function simulateNfc(){toast('NFC tap detected · opening SOS workflow');setTimeout(openSOS,450)}
+/* NFC: the server decides whether the card works; a scan only OPENS a confirmation, it never raises an alert by itself. */
+let nfcConfirmTimer=null;
+async function simulateNfc(){
+  if(!AUTH.user){toast('Sign in first, then scan your card.');return}
+  try{if(await API.nfcScan()==='disabled'){toast('NFC card is DISABLED: scan ignored, no alert started. Reactivate it on the NFC Card page.');return}}
+  catch(e){toast('Could not check your NFC card ('+shortErr(e)+'). Scan ignored.');return}
+  document.getElementById('nfcConfirm').classList.add('show');
+  clearTimeout(nfcConfirmTimer);nfcConfirmTimer=setTimeout(()=>nfcConfirmAnswer(false),10000);   // unanswered = ignored
+}
+function nfcConfirmAnswer(yes){
+  clearTimeout(nfcConfirmTimer);document.getElementById('nfcConfirm').classList.remove('show');
+  if(yes){sosSourcePending='nfc';openSOS()}else toast('NFC scan ignored: no alert started.');
+}
+async function toggleNfc(){
+  const to=!MYPROFILE.nfcActive;
+  if(!confirm(to?'Reactivate your NFC card?':'Disable your NFC card? Scanning it will no longer start anything until you reactivate it.'))return;
+  try{await API.setNfcActive(to);MYPROFILE.nfcActive=to;renderProfile();toast(to?'NFC card reactivated.':'NFC card disabled.')}catch(e){toast('Could not change the card: '+shortErr(e))}
+}
 async function shareLocation(){
   // Only a real, recent GPS fix is shared: never the demo point, never a position restored from a previous session.
   if(!sessionFixAt||Date.now()-sessionFixAt>120000){toast('No current GPS fix to share yet. Tap “Locate me” first.');return}
-  const text='SafeTrack location: '+state.location.lat.toFixed(5)+', '+state.location.lon.toFixed(5);const url='https://www.google.com/maps?q='+state.location.lat+','+state.location.lon;if(navigator.share){try{await navigator.share({title:'SafeTrack location',text,url});toast('Location share sheet opened')}catch(e){}}else{try{await navigator.clipboard.writeText(url);toast('Location link copied')}catch(e){toast('Location: '+url)}}}
+  const text='SafeTrack location: '+state.location.lat.toFixed(5)+', '+state.location.lon.toFixed(5)+(locationDetailsText(MYPROFILE)?' ('+locationDetailsText(MYPROFILE)+')':'')+' · '+new Date().toLocaleString();const url='https://www.google.com/maps?q='+state.location.lat+','+state.location.lon;if(navigator.share){try{await navigator.share({title:'SafeTrack location',text,url});toast('Location share sheet opened')}catch(e){}}else{try{await navigator.clipboard.writeText(url);toast('Location link copied')}catch(e){toast('Location: '+url)}}}
 /* ================= SafeWalk (walking navigation prototype) =================
    State: one route object (activeRoute) + one navigation state object (nav).
    Map:   native MapLibre GL (OpenFreeMap vector style, raster fallback style) behind a small view
@@ -2924,10 +2977,11 @@ function makeLocalAPI(){
   return {
     mode:'local',
     async init(){const d=load(),u=d.users.find(x=>x.id===me());return u?pub(u):null},
-    async signUp(email,password,name){
+    async signUp(email,password,name,terms){
       const d=load();email=email.toLowerCase().trim();
+      if(!terms)throw new Error('You must agree to the Terms and Conditions');
       if(d.users.some(u=>u.email===email))throw new Error('User already registered');
-      const u={id:uid(),email,name:name||email.split('@')[0],pw:await hash(password)};d.users.push(u);save(d);
+      const u={id:uid(),email,name:name||email.split('@')[0],pw:await hash(password),termsVersion:terms,termsAt:Date.now(),admin:d.users.length===0,nfc:true,building:'',floor:'',unit:'',details:''};d.users.push(u);save(d);
       sessionStorage.setItem('safetrack_local_session',u.id);return {user:pub(u)};
     },
     async signIn(email,password){
@@ -2936,6 +2990,13 @@ function makeLocalAPI(){
       sessionStorage.setItem('safetrack_local_session',u.id);return {user:pub(u)};
     },
     async signOut(){sessionStorage.removeItem('safetrack_local_session')},
+    async getProfile(){const d=load(),u=d.users.find(x=>x.id===need());return {name:u.name,email:u.email,building:u.building||'',floor:u.floor||'',unit:u.unit||'',details:u.details||'',nfcActive:u.nfc!==false,isAdmin:!!u.admin}},
+    async saveProfile(p){const d=load(),u=d.users.find(x=>x.id===need());Object.assign(u,{building:p.building,floor:p.floor,unit:p.unit,details:p.details});save(d);return true},
+    async setNfcActive(v){const d=load(),u=d.users.find(x=>x.id===need());u.nfc=!!v;save(d);return true},
+    async nfcScan(){const d=load(),u=d.users.find(x=>x.id===need());return u.nfc!==false?'ok':'disabled'},
+    async submitFeedback(category,message){const d=load();(d.feedback=d.feedback||[]).unshift({id:uid(),userId:need(),category,message,status:'new',createdAt:Date.now()});save(d);return true},
+    async listFeedback(){const d=load(),m=need(),me=d.users.find(u=>u.id===m);return (d.feedback||[]).filter(f=>me.admin||f.userId===m).map(f=>{const u=d.users.find(x=>x.id===f.userId);return {id:f.id,category:f.category,message:f.message,status:f.status,createdAt:f.createdAt,author:me.admin?u.name+' <'+u.email+'>':null,mine:f.userId===m}})},
+    async setFeedbackStatus(id,s){const d=load(),me=d.users.find(u=>u.id===need());if(!me.admin)throw new Error('admins only');const f=(d.feedback||[]).find(x=>x.id===id);if(f)f.status=s;save(d);return !!f},
     async listContacts(){
       const d=load(),m=need();
       return d.contacts.filter(c=>c.a===m||c.b===m).map(c=>{const o=d.users.find(u=>u.id===(c.a===m?c.b:c.a));return {id:c.id,otherId:o.id,name:o.name,email:o.email,status:c.status==='accepted'?'accepted':(c.a===m?'outgoing':'incoming')}});
@@ -2953,8 +3014,8 @@ function makeLocalAPI(){
     },
     async removeContact(id){const d=load(),m=need();const n=d.contacts.length;d.contacts=d.contacts.filter(c=>!(c.id===id&&(c.a===m||c.b===m)));save(d);ping('contacts');return d.contacts.length<n},
     async startSos(p){
-      const d=load(),m=need();d.sos.forEach(s=>{if(s.userId===m&&s.active){s.active=false}});
-      const a={id:uid(),userId:m,lat:p.lat,lon:p.lon,accuracy:p.accuracy,confirmed:!!p.confirmed,active:true,startedAt:Date.now(),updatedAt:Date.now()};d.sos.push(a);save(d);ping('sos');
+      const d=load(),m=need(),u=d.users.find(x=>x.id===m);if(p.source==='nfc'&&u.nfc===false)throw new Error('NFC card is disabled');d.sos.forEach(s=>{if(s.userId===m&&s.active){s.active=false}});
+      const a={id:uid(),userId:m,lat:p.lat,lon:p.lon,accuracy:p.accuracy,confirmed:!!p.confirmed,building:u.building||null,floor:u.floor||null,unit:u.unit||null,details:u.details||null,source:p.source==='nfc'?'nfc':'button',active:true,startedAt:Date.now(),updatedAt:Date.now()};d.sos.push(a);save(d);ping('sos');
       return {id:a.id,notified:d.contacts.filter(c=>c.status==='accepted'&&(c.a===m||c.b===m)).length};
     },
     async updateSos(id,p){const d=load(),m=need();const a=d.sos.find(s=>s.id===id&&s.userId===m&&s.active);if(!a)return false;Object.assign(a,{lat:p.lat,lon:p.lon,accuracy:p.accuracy,confirmed:!!p.confirmed,updatedAt:Date.now()});save(d);ping('sos');return true},
@@ -2963,7 +3024,7 @@ function makeLocalAPI(){
       const d=load(),m=need(),cutoff=Date.now()-2*3600e3;
       return d.sos.filter(a=>a.active&&a.updatedAt>cutoff&&a.userId!==m).map(a=>{
         const c=isContact(d,m,a.userId),u=d.users.find(x=>x.id===a.userId);
-        return c?{id:a.id,kind:'contact',name:u.name,lat:a.lat,lon:a.lon,accuracy:a.accuracy,confirmed:a.confirmed,startedAt:a.startedAt,updatedAt:a.updatedAt}
+        return c?{id:a.id,kind:'contact',name:u.name,lat:a.lat,lon:a.lon,accuracy:a.accuracy,confirmed:a.confirmed,startedAt:a.startedAt,updatedAt:a.updatedAt,building:a.building,floor:a.floor,unit:a.unit,details:a.details}
                :{id:a.id,kind:'public',name:null,lat:a.lat==null?null:grid(a.lat),lon:a.lon==null?null:grid(a.lon),accuracy:null,confirmed:null,startedAt:a.startedAt,updatedAt:a.updatedAt};
       });
     },
@@ -2980,17 +3041,24 @@ function makeSupabaseAPI(){
   return {
     mode:'supabase',
     async init(){const r=await sb.auth.getSession();return userOf(r.data&&r.data.session)},
-    async signUp(email,password,name){const r=await sb.auth.signUp({email,password,options:{data:{display_name:name}}});if(r.error)throw new Error(r.error.message);if(!r.data.session)return {needsConfirm:true};return {user:userOf(r.data.session)}},
+    async signUp(email,password,name,terms){const r=await sb.auth.signUp({email,password,options:{data:{display_name:name,terms_version:terms}}});if(r.error)throw new Error(r.error.message);if(!r.data.session)return {needsConfirm:true};return {user:userOf(r.data.session)}},
     async signIn(email,password){const r=await sb.auth.signInWithPassword({email,password});if(r.error)throw new Error(r.error.message);return {user:userOf(r.data.session)}},
     async signOut(){await sb.auth.signOut()},
+    async getProfile(){const r=(ok(await sb.rpc('get_my_profile'))||[])[0]||{};return {name:r.display_name,email:r.email,building:r.building||'',floor:r.floor||'',unit:r.unit||'',details:r.details||'',nfcActive:r.nfc_active!==false,isAdmin:!!r.is_admin}},
+    async saveProfile(p){return ok(await sb.rpc('save_my_profile',{p_building:p.building,p_floor:p.floor,p_unit:p.unit,p_details:p.details}))},
+    async setNfcActive(v){return ok(await sb.rpc('set_nfc_active',{p_active:!!v}))},
+    async nfcScan(){return ok(await sb.rpc('nfc_scan'))},
+    async submitFeedback(category,message){return ok(await sb.rpc('submit_feedback',{p_category:category,p_message:message}))},
+    async listFeedback(){return (ok(await sb.rpc('list_feedback'))||[]).map(r=>({id:r.id,category:r.category,message:r.message,status:r.status,createdAt:Date.parse(r.created_at),author:r.author,mine:r.mine}))},
+    async setFeedbackStatus(id,s){return ok(await sb.rpc('set_feedback_status',{p_id:id,p_status:s}))},
     async listContacts(){return (ok(await sb.rpc('list_contacts'))||[]).map(r=>({id:r.contact_id,otherId:r.other_id,name:r.other_name,email:r.other_email,status:r.status}))},
     async requestContact(email){return ok(await sb.rpc('request_contact',{p_email:email}))},
     async respondContact(id,accept){return ok(await sb.rpc('respond_contact',{p_id:id,p_accept:!!accept}))},
     async removeContact(id){return ok(await sb.rpc('remove_contact',{p_id:id}))},
-    async startSos(p){const r=ok(await sb.rpc('start_sos',{p_lat:p.lat,p_lon:p.lon,p_acc:p.accuracy,p_confirmed:!!p.confirmed}));return {id:r.id,notified:r.notified}},
+    async startSos(p){const r=ok(await sb.rpc('start_sos',{p_lat:p.lat,p_lon:p.lon,p_acc:p.accuracy,p_confirmed:!!p.confirmed,p_source:p.source==='nfc'?'nfc':'button'}));return {id:r.id,notified:r.notified}},
     async updateSos(id,p){return ok(await sb.rpc('update_sos',{p_id:id,p_lat:p.lat,p_lon:p.lon,p_acc:p.accuracy,p_confirmed:!!p.confirmed}))},
     async endSos(id){return ok(await sb.rpc('end_sos',{p_id:id}))},
-    async listVisibleSos(){return (ok(await sb.rpc('list_visible_sos'))||[]).map(r=>({id:r.id,kind:r.kind,name:r.name,lat:num(r.lat),lon:num(r.lon),accuracy:num(r.accuracy),confirmed:r.confirmed,startedAt:Date.parse(r.started_at),updatedAt:Date.parse(r.updated_at)}))},
+    async listVisibleSos(){return (ok(await sb.rpc('list_visible_sos'))||[]).map(r=>({id:r.id,kind:r.kind,name:r.name,lat:num(r.lat),lon:num(r.lon),accuracy:num(r.accuracy),confirmed:r.confirmed,startedAt:Date.parse(r.started_at),updatedAt:Date.parse(r.updated_at),building:r.building,floor:r.floor,unit:r.unit,details:r.details}))},
     subscribe(h){
       const ch=sb.channel('safetrack-live')
         .on('postgres_changes',{event:'*',schema:'public',table:'sos_alerts'},()=>h.onSos())
@@ -3019,6 +3087,7 @@ function setAuthMode(mode){
   setText('authSubmit',up?'Create account':'Sign in');
   setText('authSwitchText',up?'Already have an account?':'New to SafeTrack?');setText('authSwitchBtn',up?'Sign in':'Create account');
   document.getElementById('authNameField').style.display=up?'block':'none';
+  document.getElementById('authTermsField').style.display=up?'block':'none';document.getElementById('authTerms').checked=false;
   const pw=document.getElementById('authPassword');if(pw)pw.autocomplete=up?'new-password':'current-password';
   setAuthMsg('');
 }
@@ -3028,16 +3097,17 @@ async function submitAuth(ev){
   if(ev)ev.preventDefault();
   const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value,name=document.getElementById('authName').value.trim();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){setAuthMsg('Enter a valid email address.');return false}
-  if(authMode==='signup'){if(!name){setAuthMsg('Enter your name so your contacts recognise you.');return false}if(password.length<8){setAuthMsg('Choose a password with at least 8 characters.');return false}}
+  if(authMode==='signup'){if(!name){setAuthMsg('Enter your name so your contacts recognise you.');return false}const pp=passwordProblem(password);if(pp){setAuthMsg('Your password needs '+pp+'.');return false}if(!document.getElementById('authTerms').checked){setAuthMsg('You must agree to the Terms and Conditions to create an account.');return false}}
   else if(!password){setAuthMsg('Enter your password.');return false}
+  if(authMode==='signin'){const w=throttleWait();if(w){setAuthMsg('Too many failed attempts. Please wait '+w+' seconds and try again.');return false}}
   const btn=document.getElementById('authSubmit');btn.disabled=true;setAuthMsg('');
   try{
-    const r=authMode==='signup'?await API.signUp(email,password,name):await API.signIn(email,password);
+    const r=authMode==='signup'?await API.signUp(email,password,name,TERMS_VERSION):await API.signIn(email,password);
     if(r.needsConfirm){setAuthMsg('Account created. Check your email and click the confirmation link, then sign in.','ok');setAuthMode('signin');return false}
-    document.getElementById('authPassword').value='';
+    document.getElementById('authPassword').value='';throttleReset();
     try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission()}catch(e){}   // lets contacts' SOS alerts show while the app is in the background
     await onSignedIn(r.user);
-  }catch(e){setAuthMsg(friendlyAuthError(e))}
+  }catch(e){if(authMode==='signin'&&/invalid login|invalid credentials/i.test(String(e&&e.message)))throttleFail();setAuthMsg(friendlyAuthError(e))}
   finally{btn.disabled=false}
   return false;
 }
@@ -3057,7 +3127,8 @@ async function onSignedIn(user){
   document.body.classList.remove('auth-required');
   page('dashboard',document.querySelector('.nav button'));
   renderState();
-  await Promise.all([refreshContacts(true),refreshSos()]);
+  await Promise.all([refreshContacts(true),refreshSos(),refreshProfile()]);
+  if(new URLSearchParams(location.search).has('nfc')){history.replaceState(null,'',location.pathname);simulateNfc()}   // a real NFC tag opens ?nfc=1
   try{unsubscribeLive&&unsubscribeLive();unsubscribeLive=API.subscribe({onSos:()=>refreshSos(),onContacts:()=>refreshContacts()})}catch(e){console.error(e)}
   clearInterval(sosPollTimer);sosPollTimer=setInterval(()=>{if(!document.hidden)refreshSos()},15000);
   if(state.sos.active||state.sos.pendingEndId){sosKick()}
@@ -3066,8 +3137,8 @@ async function signOutUser(){
   if(state.sos.active){toast('End your active SOS before signing out.');return}
   try{unsubscribeLive&&unsubscribeLive()}catch(e){}unsubscribeLive=null;clearInterval(sosPollTimer);sosPollTimer=null;
   try{await API.signOut()}catch(e){}
-  AUTH.user=null;CONTACTS=[];SOS_VISIBLE=[];incomingAlerts.clear();state.contacts=[];state.user={...state.user,name:'SafeTrack User',email:'',signedIn:false};saveState();
-  renderContacts();renderSosPins();renderIncoming();
+  AUTH.user=null;MYPROFILE={building:'',floor:'',unit:'',details:'',nfcActive:true,isAdmin:false};CONTACTS=[];SOS_VISIBLE=[];incomingAlerts.clear();state.contacts=[];state.user={...state.user,name:'SafeTrack User',email:'',signedIn:false};saveState();
+  renderContacts();renderSosPins();renderIncoming();renderProfile();
   document.body.classList.add('auth-required');page('login');setAuthMode('signin');
 }
 
@@ -3127,6 +3198,7 @@ async function contactAction(act,id){
 }
 
 /* ---------- SOS alert delivery (my alert -> server) ---------- */
+let sosLaunchSource='button',sosSourcePending='button';
 let sosSyncTimer=null,sosDirty=false,sosPendingEnd=null,sosBusy=false;
 const SOS_SYNC_MS=10000;
 function sosKick(){
@@ -3140,7 +3212,7 @@ async function sosSync(){
     if(sosPendingEnd){try{await API.endSos(sosPendingEnd);sosPendingEnd=null;state.sos.pendingEndId=null;saveState()}catch(e){}}
     if(state.sos.active){
       const l=state.sos.location&&state.sos.location.confirmed?state.sos.location:null;
-      const body=l?{lat:l.lat,lon:l.lon,accuracy:l.accuracy,confirmed:true}:{lat:null,lon:null,accuracy:null,confirmed:false};
+      const body=l?{lat:l.lat,lon:l.lon,accuracy:l.accuracy,confirmed:true,source:sosLaunchSource}:{lat:null,lon:null,accuracy:null,confirmed:false,source:sosLaunchSource};
       if(!state.sos.alertId){
         state.sos.delivery={status:'sending'};renderState();
         const r=await API.startSos(body);state.sos.alertId=r.id;state.sos.delivery={status:'sent',contacts:r.notified,at:Date.now()};sosDirty=false;saveState();
@@ -3210,7 +3282,7 @@ function renderIncoming(){
   body.innerHTML=list.map(a=>{
     const has=Number.isFinite(a.lat)&&Number.isFinite(a.lon);
     return '<div class="inc-row"><b>'+esc(a.name)+' needs help</b><small>Started '+esc(ago(a.startedAt))+' · updated '+esc(ago(a.updatedAt))+'</small>'
-      +'<p>'+(has?'Live location'+(Number.isFinite(a.accuracy)?' (±'+Math.round(a.accuracy)+' m)':'')+(a.confirmed===false?' — not GPS-confirmed':''):'Location not available yet — they have not got a GPS fix. Try calling them.')+'</p>'
+      +detailsLine(a)+'<p>'+(has?'Live location'+(Number.isFinite(a.accuracy)?' (±'+Math.round(a.accuracy)+' m)':'')+(a.confirmed===false?' — not GPS-confirmed':''):'Location not available yet — they have not got a GPS fix. Try calling them.')+'</p>'
       +'<div class="inc-actions">'+(has?'<button class="btn primary" data-act="sos-map" data-id="'+esc(a.id)+'">Show on map</button><a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps?q='+encodeURIComponent(a.lat+','+a.lon)+'">Open in Google Maps</a>':'')+'<button class="btn" data-act="sos-dismiss" data-id="'+esc(a.id)+'">Dismiss</button></div></div>';
   }).join('');
 }
@@ -3257,6 +3329,71 @@ document.addEventListener('click',e=>{
   else if(act==='sos-dismiss'){incomingAlerts.delete(id);renderIncoming()}
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&AUTH.user){refreshSos();refreshContacts(true)}});
+
+/* ---------- terms, password rules, login throttle ---------- */
+const TERMS_VERSION='2026-11-10';
+function passwordProblem(pw){if(pw.length<8)return 'at least 8 characters';if(!/[A-Za-z]/.test(pw)||!/\d/.test(pw))return 'at least one letter and one number';return ''}
+/* Client-side throttle (convenience only: the server rate-limits sign-ins too). 5 misses -> wait 15 s, doubling up to 5 min. */
+const THROTTLE_KEY='safetrack_login_throttle';
+function throttleState(){try{return JSON.parse(localStorage.getItem(THROTTLE_KEY))||{n:0,until:0}}catch(e){return {n:0,until:0}}}
+function throttleWait(){return Math.max(0,Math.ceil((throttleState().until-Date.now())/1000))}
+function throttleFail(){const s=throttleState();s.n++;if(s.n>=5)s.until=Date.now()+Math.min(300,15*Math.pow(2,s.n-5))*1000;try{localStorage.setItem(THROTTLE_KEY,JSON.stringify(s))}catch(e){}}
+function throttleReset(){try{localStorage.removeItem(THROTTLE_KEY)}catch(e){}}
+
+/* ---------- profile: building / floor / unit, NFC status ---------- */
+let MYPROFILE={building:'',floor:'',unit:'',details:'',nfcActive:true,isAdmin:false};
+function locationDetailsText(p){const a=[];if(p.building)a.push('Building: '+p.building);if(p.floor)a.push('Floor: '+p.floor);if(p.unit)a.push('Unit/Room: '+p.unit);if(p.details)a.push('Note: '+p.details);return a.join(', ')}
+function detailsLine(a){const t=locationDetailsText(a);return t?'<p>'+esc(t)+'</p>':''}
+async function refreshProfile(){try{MYPROFILE={...MYPROFILE,...await API.getProfile()}}catch(e){toast('Couldn’t load your profile: '+shortErr(e))}renderProfile()}
+function renderProfile(){
+  ['building','floor','unit','details'].forEach(k=>{const el=document.getElementById('pf_'+k);if(el&&document.activeElement!==el)el.value=MYPROFILE[k]||''});
+  const st=document.getElementById('nfcStatus'),bt=document.getElementById('nfcToggle'),pill=document.getElementById('nfcPill');
+  if(st){st.textContent=MYPROFILE.nfcActive?'Active':'Disabled';st.className=MYPROFILE.nfcActive?'safe':'danger-t'}
+  if(bt){bt.textContent=MYPROFILE.nfcActive?'Disable NFC card':'Reactivate NFC card';bt.className='btn full '+(MYPROFILE.nfcActive?'danger':'primary')}
+  if(pill)pill.lastChild.textContent=MYPROFILE.nfcActive?'Card ready':'Card disabled';
+  const adm=document.getElementById('feedbackAdminNote');if(adm)adm.hidden=!MYPROFILE.isAdmin;
+}
+async function saveLocationDetails(){
+  const v=k=>document.getElementById('pf_'+k).value.trim();
+  const p={building:v('building'),floor:v('floor'),unit:v('unit'),details:v('details')};
+  if(p.building.length>120||p.floor.length>20||p.unit.length>40||p.details.length>300){toast('One of the fields is too long.');return}
+  try{await API.saveProfile(p);Object.assign(MYPROFILE,p);toast('Location details saved. They are included when you send an SOS.')}catch(e){toast('Couldn’t save: '+shortErr(e))}
+}
+
+/* ---------- quick emergency commands ---------- */
+function gotoPage(id){const b=[...document.querySelectorAll('.nav button')].find(x=>(x.getAttribute('onclick')||'').includes("'"+id+"'"));page(id,b)}
+function quickCall(){if(confirm('Call '+HOTLINE_LABEL+' ('+HOTLINE_NUMBER+')?'))window.location.href='tel:'+HOTLINE_NUMBER}   // the confirm prevents accidental calls; the phone still asks you to press call
+function viewMyLocation(){gotoPage('map');locate(true)}
+async function notifyCompanions(){
+  let f;try{f=await getFreshPosition()}catch(e){toast('Can’t get your location: '+(e&&e.message||e));return}
+  const d=locationDetailsText(MYPROFILE),msg='My location: https://maps.google.com/?q='+f.lat+','+f.lon+(d?' ('+d+')':'')+' · '+new Date().toLocaleString();
+  if(navigator.share){try{await navigator.share({title:'My location',text:msg});toast('Share screen opened: choose your companions and tap Send.');return}catch(e){if(e&&e.name==='AbortError')return}}
+  window.location.href='sms:'+TRUSTED_SMS_CONTACTS.map(c=>c.number).join(',')+(/iPhone|iPad|iPod/i.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(msg);
+}
+
+/* ---------- feedback & complaints ---------- */
+const FB_LABEL={feedback:'Feedback',complaint:'Complaint',technical:'Technical problem',suggestion:'Suggestion'};
+const FB_STATUS={new:'New',in_review:'In review',resolved:'Resolved'};
+async function submitFeedback(){
+  const cat=document.getElementById('fbCategory').value,msg=document.getElementById('fbMessage').value.trim();
+  if(msg.length<5){toast('Please write at least a few words.');return}
+  if(msg.length>2000){toast('Please keep it under 2000 characters.');return}
+  const btn=document.getElementById('fbSubmit');btn.disabled=true;
+  try{await API.submitFeedback(cat,msg);document.getElementById('fbMessage').value='';toast('Thank you! Your '+FB_LABEL[cat].toLowerCase()+' was submitted.');await refreshFeedback()}
+  catch(e){toast('Couldn’t submit: '+shortErr(e))}finally{btn.disabled=false}
+}
+async function refreshFeedback(){
+  const el=document.getElementById('feedbackList');if(!el||!AUTH.user)return;
+  try{
+    const list=await API.listFeedback();
+    el.innerHTML=list.length?list.map(f=>'<div class="fb-row"><div class="fb-head"><b>'+esc(FB_LABEL[f.category]||f.category)+'</b>'
+      +(MYPROFILE.isAdmin?'<select aria-label="Status" onchange="setFbStatus(\''+esc(f.id)+'\',this.value)">'+Object.keys(FB_STATUS).map(s=>'<option value="'+s+'"'+(s===f.status?' selected':'')+'>'+FB_STATUS[s]+'</option>').join('')+'</select>':'<span class="pill">'+esc(FB_STATUS[f.status]||f.status)+'</span>')
+      +'</div><p>'+esc(f.message)+'</p><small>'+esc(new Date(f.createdAt).toLocaleString())+(f.author?' · '+esc(f.author):'')+'</small></div>').join(''):'<p class="muted empty-note">Nothing submitted yet.</p>';
+  }catch(e){el.innerHTML='<p class="muted empty-note">Couldn’t load submissions: '+esc(shortErr(e))+'</p>'}
+}
+async function setFbStatus(id,s){try{await API.setFeedbackStatus(id,s);toast('Status updated.')}catch(e){toast('Couldn’t update: '+shortErr(e))}}
+function openTerms(){document.getElementById('termsDialog').classList.add('show')}
+function closeTerms(){document.getElementById('termsDialog').classList.remove('show')}
 
 function resetLocalDemo(){try{localStorage.removeItem(STORAGE_KEY)}catch(e){}location.reload()}
 // Permission revoked (or re-granted) while the page is open: reflect it immediately instead of waiting for the next GPS error.
