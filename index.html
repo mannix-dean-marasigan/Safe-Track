@@ -816,8 +816,8 @@ html body:not(.sw-page) .sos-fab{width:88px;height:88px;font-size:22px}
 .sos-bigbtn.share{background:#2a1218;color:#ffd0d8}
 .sos-action-status{margin:0;font-size:12px;line-height:1.5;color:#c3d3da}
 /* accounts / contacts / SOS alerts */
-body.auth-required .sidebar,body.auth-required .sos-fab,body.auth-required .functional-bar{display:none!important}
-body.auth-required main{margin-left:0!important;padding-bottom:24px!important}
+body.auth-required .sidebar,body.auth-required .sos-fab,body.auth-required .functional-bar,body.card-mode .sidebar,body.card-mode .sos-fab,body.card-mode .functional-bar{display:none!important}
+body.auth-required main,body.card-mode main{margin-left:0!important;padding-bottom:24px!important}
 .auth-msg{margin:10px 0;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.5}
 .auth-msg.bad{background:#2a1218;border:1px solid #6b2a37;color:#ffb3c0}.auth-msg.ok{background:#0b2a22;border:1px solid #245041;color:#9ff0d4}
 .auth-switch{margin-top:14px;font-size:12px;color:#8ca1ab}.linkbtn{background:none;border:0;color:var(--green);font:inherit;font-weight:700;cursor:pointer;padding:6px 4px;min-height:36px}
@@ -1004,9 +1004,11 @@ body.auth-required main{margin-left:0!important;padding-bottom:24px!important}
 <div class="card pad" style="margin-top:16px"><h3 style="font:700 16px 'Space Grotesk';margin:0">Where you are (building details)</h3><p class="muted">GPS can't tell which floor or unit you're in. Enter it here once; it is sent to your trusted contacts with every SOS.</p><div class="form-grid"><div class="field"><label for="pf_building">BUILDING NAME</label><input id="pf_building" maxlength="120" autocomplete="off"></div><div class="field"><label for="pf_floor">FLOOR</label><input id="pf_floor" maxlength="20" autocomplete="off"></div><div class="field"><label for="pf_unit">ROOM / UNIT</label><input id="pf_unit" maxlength="40" autocomplete="off"></div><div class="field"><label for="pf_details">OTHER DETAILS</label><input id="pf_details" maxlength="300" placeholder="e.g. Tower B, near elevator" autocomplete="off"></div></div><button class="btn primary" type="button" onclick="saveLocationDetails()">Save details</button></div>
 <div class="card pad" style="margin-top:16px"><h3 style="font:700 16px 'Space Grotesk';margin:0">Your account</h3><p class="muted" id="acctInfo">Not signed in</p><button class="btn" style="margin-top:6px" onclick="signOutUser()">Sign out</button></div></section>
 
-<section id="nfc" class="page"><div class="top"><div><div class="eyebrow">Hardware trigger</div><div class="title">SafeTrack NFC Card</div></div><div class="pill" id="nfcPill"><span class="dot"></span>Card ready</div></div><div class="nfc-page"><div class="card hero-card"><div class="big-nfc"><div class="symbol">⌁</div><strong>SAFETRACK</strong><small>CARD #083A</small></div><button class="btn primary" onclick="simulateNfc()">Simulate NFC tap</button><p class="muted" style="font-size:11px;margin:10px 0 0">A tap only asks you to confirm; it never starts an alert by itself.</p></div><div class="card panel"><h2>Tap. Confirm. Get help.</h2><p>The physical NFC card is designed to be a fast shortcut into the emergency workflow. A real tag can store a unique HTTPS URL tied to a secure card token.</p><div class="steps"><div class="step"><div class="step-num">1</div><div><b>Tap your NFC card</b><p>Phone opens the SafeTrack emergency URL.</p></div></div><div class="step"><div class="step-num">2</div><div><b>Confirm SOS</b><p>Prevent accidental taps with a short confirmation flow.</p></div></div><div class="step"><div class="step-num">3</div><div><b>Location starts sharing</b><p>GPS position is sent to the authorized safety network.</p></div></div><div class="step"><div class="step-num">4</div><div><b>Trusted network is notified</b><p>Family and selected contacts receive a secure tracking link.</p></div></div></div><div class="option" style="margin-top:18px"><div class="option-row"><b>Card status</b><span id="nfcStatus" class="safe">Active</span></div><div class="muted">Only the account owner can change this. A disabled card is refused by the server.</div><button class="btn danger full" id="nfcToggle" type="button" onclick="toggleNfc()" style="margin-top:12px">Disable NFC card</button></div></div></div></section>
+<section id="nfc" class="page"><div class="top"><div><div class="eyebrow">Hardware trigger</div><div class="title">SafeTrack NFC Card</div></div><div class="pill" id="nfcPill"><span class="dot"></span>Card ready</div></div><div class="nfc-page"><div class="card hero-card"><div class="big-nfc"><div class="symbol">⌁</div><strong>SAFETRACK</strong><small>CARD #083A</small></div><button class="btn primary" onclick="simulateNfc()">Simulate NFC tap</button><p class="muted" style="font-size:11px;margin:10px 0 0">A tap only asks you to confirm; it never starts an alert by itself.</p></div><div class="card panel"><h2>Tap. Confirm. Get help.</h2><p>The physical NFC card is designed to be a fast shortcut into the emergency workflow. A real tag can store a unique HTTPS URL tied to a secure card token.</p><div class="steps"><div class="step"><div class="step-num">1</div><div><b>Tap your NFC card</b><p>Phone opens the SafeTrack emergency URL.</p></div></div><div class="step"><div class="step-num">2</div><div><b>Confirm SOS</b><p>Prevent accidental taps with a short confirmation flow.</p></div></div><div class="step"><div class="step-num">3</div><div><b>Location starts sharing</b><p>GPS position is sent to the authorized safety network.</p></div></div><div class="step"><div class="step-num">4</div><div><b>Trusted network is notified</b><p>Family and selected contacts receive a secure tracking link.</p></div></div></div><div class="option" style="margin-top:18px"><div class="option-row"><b>Card status</b><span id="nfcStatus" class="safe">Active</span></div><div class="muted">Only the account owner can change this. A disabled card is refused by the server.</div><button class="btn danger full" id="nfcToggle" type="button" onclick="toggleNfc()" style="margin-top:12px">Disable NFC card</button><button class="btn full" id="nfcLinkBtn" type="button" onclick="makeCardLink()" style="margin-top:8px">Create / replace card link</button><div id="nfcLinkOut" class="note" hidden></div></div></div></div></section>
 
 <section id="safety" class="page"><div class="top"><div><div class="eyebrow">Risk intelligence</div><div class="title">Safety Intelligence</div></div><div class="pill">Illustrative dataset · Last 30 days</div></div><div class="section-grid"><div class="card wide-map"><div id="safetyMap" class="map"></div></div><div class="card panel"><h2>Area insight</h2><p>SafeTrack can aggregate verified incident reports and other approved data sources into a time-aware safety signal.</p><div class="option"><div class="option-row"><b>Current area</b><span class="warn">Moderate</span></div><p class="muted">Illustrative activity level. Not a statement that an area is objectively dangerous.</p></div><div class="option"><div class="option-row"><b>Evening signal</b><span class="danger-t">Elevated</span></div><p class="muted">Example: higher report density during selected evening hours.</p></div><div class="option"><div class="option-row"><b>Nearby safe places</b><span class="safe">4</span></div><p class="muted">Hospitals, police facilities and verified safe locations can be displayed here.</p></div><h3 style="font-size:12px;margin-top:24px">Risk scale</h3><div class="riskbar"></div><div class="scale"><span>Lower</span><span>Moderate</span><span>Elevated</span></div></div></div></section>
+
+<section id="cardpage" class="page"><div style="padding-top:30px"><div class="card pad" style="max-width:560px;margin:0 auto;text-align:center"><div class="ring" style="margin:0 auto 12px">!</div><h2 style="font:700 22px 'Space Grotesk';margin:0 0 8px">SafeTrack emergency card</h2><p class="muted" id="cardInfo" role="status" style="line-height:1.6">Checking your card…</p><p id="cardSosText" role="status" style="line-height:1.6"></p><button class="btn danger full" id="cardEnd" hidden onclick="endSOS()">End SOS (I am safe)</button><p style="margin-top:18px"><a class="linkbtn" href="./">Sign in to SafeTrack</a></p></div></div></section>
 
 <section id="feedback" class="page"><div class="top"><div><div class="eyebrow">We're listening</div><div class="title">Feedback &amp; Complaints</div></div></div>
 <div class="card pad"><div class="field"><label for="fbCategory">CATEGORY</label><select id="fbCategory"><option value="feedback">Feedback</option><option value="complaint">Complaint</option><option value="technical">Technical problem</option><option value="suggestion">Suggestion</option></select></div>
@@ -1139,6 +1141,8 @@ function renderState(){
   const meta=document.getElementById('mapLocationMeta');if(meta)meta.textContent=state.location.live?'Live GPS · accuracy ±'+(state.location.accuracy?Math.round(state.location.accuracy):'?')+'m · updated '+relativeTime(state.location.lastUpdated):'Demo location · request GPS to go live.';
   const banner=document.getElementById('emergencyBanner');if(banner)banner.style.display=state.sos.active?'flex':'none';
   const bt=document.getElementById('sosBannerText');if(bt&&state.sos.active&&typeof sosDeliveryLine==='function')bt.textContent=sosDeliveryLine();
+  const cst=document.getElementById('cardSosText');if(cst&&typeof sosDeliveryLine==='function')cst.textContent=state.sos.active?sosDeliveryLine():'';
+  const cend=document.getElementById('cardEnd');if(cend)cend.hidden=!state.sos.active;
   const tl=document.getElementById('sosTimeline');if(tl&&typeof sosTimelineText==='function')tl.textContent=sosTimelineText();
   const hist=document.getElementById('sosHistory');if(hist){const hs=(state.sos.history||[]);hist.innerHTML=hs.length?hs.slice(0,8).map(x=>'<div class="event"><div class="icon '+(x.type==='activated'?'red':'green')+'">'+(x.type==='activated'?'!':'✓')+'</div><div style="flex:1"><b>'+(x.type==='activated'?'SOS activated':'SOS ended')+'</b><p>'+(x.type==='activated'?(x.confirmed?'GPS-confirmed location':'Location not confirmed'):'Alert closed')+'</p><time>'+esc(new Date(x.at).toLocaleString())+'</time></div></div>').join(''):'<p class="muted empty-note">No SOS alerts yet.</p>'}
   if(typeof renderContacts==='function'&&typeof CONTACTS!=='undefined')renderContacts();
@@ -1383,7 +1387,7 @@ async function finalizeSOS(token){
   saveState();
   startWatching('sos');sosDirty=false;sosKick();
   toast(loc.confirmed?'SOS active · location confirmed (±'+Math.round(loc.accuracy)+'m) · sending to your contacts…':'SOS active · location NOT confirmed ('+loc.reason+') · sending to your contacts…');
-  page('sos',document.querySelectorAll('.nav button')[3]);
+  if(CARD_TOKEN&&!AUTH.user)page('cardpage');else page('sos',document.querySelectorAll('.nav button')[3]);
   sosActionsShow(loc);
 }
 /* ===== SOS quick actions (1: CALL, 2: SHARE LOCATION, 3: NOTIFICATION) =====
@@ -1444,7 +1448,19 @@ async function simulateNfc(){
 }
 function nfcConfirmAnswer(yes){
   clearTimeout(nfcConfirmTimer);document.getElementById('nfcConfirm').classList.remove('show');
-  if(yes){sosSourcePending='nfc';openSOS()}else toast('NFC scan ignored: no alert started.');
+  if(yes){sosSourcePending='nfc';openSOS()}else{toast('NFC scan ignored: no alert started.');if(CARD_TOKEN)setText('cardInfo','Ignored: no alert was started. You can close this page.')}
+}
+async function makeCardLink(){
+  if(!confirm(MYPROFILE.hasCard?'Create a NEW card link? The one written on your card now will stop working.':'Create the secret link for your NFC card?'))return;
+  try{
+    const t=await API.createCardToken();MYPROFILE.hasCard=true;
+    const url=location.origin+location.pathname+'?card='+t,out=document.getElementById('nfcLinkOut');
+    out.hidden=false;out.textContent='';
+    const p=document.createElement('p');p.textContent='Write this link to your NFC tag with an NFC-writing app. It is shown only once. Anyone who taps the card can start an SOS for you, so keep it with you and disable it here if it is lost.';
+    const i=document.createElement('input');i.readOnly=true;i.value=url;i.style.width='100%';i.setAttribute('aria-label','Card link');
+    const b=document.createElement('button');b.className='btn';b.type='button';b.textContent='Copy link';b.onclick=async()=>{try{await navigator.clipboard.writeText(url);toast('Link copied')}catch(e){i.select();toast('Select and copy the link')}};
+    out.append(p,i,b);
+  }catch(e){toast('Couldn’t create the card link: '+shortErr(e))}
 }
 async function toggleNfc(){
   const to=!MYPROFILE.nfcActive;
@@ -2952,7 +2968,7 @@ document.addEventListener('visibilitychange',()=>{
 const SUPABASE_URL='';        // e.g. 'https://abcdxyz.supabase.co'
 const SUPABASE_ANON_KEY='';   // the project's public "anon" key (safe to put in a web app; data is protected by the SQL policies)
 
-let API=null;                 // the active backend adapter (supabase or local test)
+let API=null,CARD_TOKEN=null;   // CARD_TOKEN: the secret from a tapped NFC card (lets the card start an SOS without logging in)                 // the active backend adapter (supabase or local test)
 const AUTH={user:null};       // {id,email,name}
 let CONTACTS=[];              // [{id,otherId,name,email,status:'accepted'|'incoming'|'outgoing'}]
 let SOS_VISIBLE=[];           // alerts of other people I may see: [{id,kind:'contact'|'public',name,lat,lon,accuracy,confirmed,startedAt,updatedAt}]
@@ -2990,10 +3006,22 @@ function makeLocalAPI(){
       sessionStorage.setItem('safetrack_local_session',u.id);return {user:pub(u)};
     },
     async signOut(){sessionStorage.removeItem('safetrack_local_session')},
-    async getProfile(){const d=load(),u=d.users.find(x=>x.id===need());return {name:u.name,email:u.email,building:u.building||'',floor:u.floor||'',unit:u.unit||'',details:u.details||'',nfcActive:u.nfc!==false,isAdmin:!!u.admin}},
+    async getProfile(){const d=load(),u=d.users.find(x=>x.id===need());return {name:u.name,email:u.email,building:u.building||'',floor:u.floor||'',unit:u.unit||'',details:u.details||'',nfcActive:u.nfc!==false,isAdmin:!!u.admin,hasCard:!!u.card}},
     async saveProfile(p){const d=load(),u=d.users.find(x=>x.id===need());Object.assign(u,{building:p.building,floor:p.floor,unit:p.unit,details:p.details});save(d);return true},
     async setNfcActive(v){const d=load(),u=d.users.find(x=>x.id===need());u.nfc=!!v;save(d);return true},
     async nfcScan(){const d=load(),u=d.users.find(x=>x.id===need());return u.nfc!==false?'ok':'disabled'},
+    async createCardToken(){const d=load(),u=d.users.find(x=>x.id===need());u.card=uid()+uid();save(d);return u.card},
+    async cardStatus(t){const d=load(),u=d.users.find(x=>x.card&&x.card===t);return !u?'invalid':(u.nfc===false?'disabled':'ok')},
+    async cardStartSos(t,p){
+      const d=load(),u=d.users.find(x=>x.card&&x.card===t);if(!u)throw new Error('invalid card');if(u.nfc===false)throw new Error('NFC card is disabled');
+      const n=d.contacts.filter(c=>c.status==='accepted'&&(c.a===u.id||c.b===u.id)).length;
+      const rc=d.sos.find(s=>s.userId===u.id&&s.active&&s.source==='nfc'&&Date.now()-s.startedAt<15000);if(rc)return {id:rc.id,notified:n};
+      d.sos.forEach(s=>{if(s.userId===u.id&&s.active)s.active=false});
+      const a={id:uid(),userId:u.id,lat:p.lat,lon:p.lon,accuracy:p.accuracy,confirmed:!!p.confirmed,building:u.building||null,floor:u.floor||null,unit:u.unit||null,details:u.details||null,source:'nfc',active:true,startedAt:Date.now(),updatedAt:Date.now()};
+      d.sos.push(a);save(d);ping('sos');return {id:a.id,notified:n};
+    },
+    async cardUpdateSos(t,id,p){const d=load(),u=d.users.find(x=>x.card&&x.card===t);if(!u)throw new Error('invalid card');const a=d.sos.find(s=>s.id===id&&s.userId===u.id&&s.active);if(!a)return false;Object.assign(a,{lat:p.lat,lon:p.lon,accuracy:p.accuracy,confirmed:!!p.confirmed,updatedAt:Date.now()});save(d);ping('sos');return true},
+    async cardEndSos(t,id){const d=load(),u=d.users.find(x=>x.card&&x.card===t);if(!u)throw new Error('invalid card');const a=d.sos.find(s=>s.id===id&&s.userId===u.id&&s.active);if(!a)return false;a.active=false;a.updatedAt=Date.now();save(d);ping('sos');return true},
     async submitFeedback(category,message){const d=load();(d.feedback=d.feedback||[]).unshift({id:uid(),userId:need(),category,message,status:'new',createdAt:Date.now()});save(d);return true},
     async listFeedback(){const d=load(),m=need(),me=d.users.find(u=>u.id===m);return (d.feedback||[]).filter(f=>me.admin||f.userId===m).map(f=>{const u=d.users.find(x=>x.id===f.userId);return {id:f.id,category:f.category,message:f.message,status:f.status,createdAt:f.createdAt,author:me.admin?u.name+' <'+u.email+'>':null,mine:f.userId===m}})},
     async setFeedbackStatus(id,s){const d=load(),me=d.users.find(u=>u.id===need());if(!me.admin)throw new Error('admins only');const f=(d.feedback||[]).find(x=>x.id===id);if(f)f.status=s;save(d);return !!f},
@@ -3044,10 +3072,15 @@ function makeSupabaseAPI(){
     async signUp(email,password,name,terms){const r=await sb.auth.signUp({email,password,options:{data:{display_name:name,terms_version:terms}}});if(r.error)throw new Error(r.error.message);if(!r.data.session)return {needsConfirm:true};return {user:userOf(r.data.session)}},
     async signIn(email,password){const r=await sb.auth.signInWithPassword({email,password});if(r.error)throw new Error(r.error.message);return {user:userOf(r.data.session)}},
     async signOut(){await sb.auth.signOut()},
-    async getProfile(){const r=(ok(await sb.rpc('get_my_profile'))||[])[0]||{};return {name:r.display_name,email:r.email,building:r.building||'',floor:r.floor||'',unit:r.unit||'',details:r.details||'',nfcActive:r.nfc_active!==false,isAdmin:!!r.is_admin}},
+    async getProfile(){const r=(ok(await sb.rpc('get_my_profile'))||[])[0]||{};return {name:r.display_name,email:r.email,building:r.building||'',floor:r.floor||'',unit:r.unit||'',details:r.details||'',nfcActive:r.nfc_active!==false,isAdmin:!!r.is_admin,hasCard:!!r.has_card}},
     async saveProfile(p){return ok(await sb.rpc('save_my_profile',{p_building:p.building,p_floor:p.floor,p_unit:p.unit,p_details:p.details}))},
     async setNfcActive(v){return ok(await sb.rpc('set_nfc_active',{p_active:!!v}))},
     async nfcScan(){return ok(await sb.rpc('nfc_scan'))},
+    async createCardToken(){return ok(await sb.rpc('create_card_token'))},
+    async cardStatus(t){return ok(await sb.rpc('card_status',{p_token:t}))},
+    async cardStartSos(t,p){const r=ok(await sb.rpc('card_start_sos',{p_token:t,p_lat:p.lat,p_lon:p.lon,p_acc:p.accuracy,p_confirmed:!!p.confirmed}));return {id:r.id,notified:r.notified}},
+    async cardUpdateSos(t,id,p){return ok(await sb.rpc('card_update_sos',{p_token:t,p_id:id,p_lat:p.lat,p_lon:p.lon,p_acc:p.accuracy,p_confirmed:!!p.confirmed}))},
+    async cardEndSos(t,id){return ok(await sb.rpc('card_end_sos',{p_token:t,p_id:id}))},
     async submitFeedback(category,message){return ok(await sb.rpc('submit_feedback',{p_category:category,p_message:message}))},
     async listFeedback(){return (ok(await sb.rpc('list_feedback'))||[]).map(r=>({id:r.id,category:r.category,message:r.message,status:r.status,createdAt:Date.parse(r.created_at),author:r.author,mine:r.mine}))},
     async setFeedbackStatus(id,s){return ok(await sb.rpc('set_feedback_status',{p_id:id,p_status:s}))},
@@ -3111,7 +3144,18 @@ async function submitAuth(ev){
   finally{btn.disabled=false}
   return false;
 }
+async function bootCardMode(token){
+  CARD_TOKEN=token;document.body.classList.remove('auth-required');document.body.classList.add('card-mode');page('cardpage');
+  if(state.sos.active){sosKick();return}   // resuming an SOS that this card started
+  let s;try{s=await API.cardStatus(token)}catch(e){CARD_TOKEN=null;setText('cardInfo','Could not check the card ('+shortErr(e)+'). Check your connection and tap again. No alert was started.');return}
+  if(s!=='ok'){CARD_TOKEN=null;setText('cardInfo',s==='disabled'?'This NFC card is DISABLED. No alert was started. Sign in to reactivate it.':'This card is not recognised. No alert was started.');return}
+  setText('cardInfo','NFC card recognised. Confirm to start an SOS.');
+  document.getElementById('nfcConfirm').classList.add('show');clearTimeout(nfcConfirmTimer);nfcConfirmTimer=setTimeout(()=>nfcConfirmAnswer(false),10000);
+}
 async function bootAuth(){
+  let ct=new URLSearchParams(location.search).get('card');
+  if(ct){history.replaceState(null,'',location.pathname);try{sessionStorage.setItem('safetrack_card_tok',ct)}catch(e){}}
+  else{try{if(state.sos.active)ct=sessionStorage.getItem('safetrack_card_tok')}catch(e){}}
   document.body.classList.add('auth-required');
   const note=document.getElementById('authModeNote');
   if(SUPABASE_URL&&SUPABASE_ANON_KEY&&window.supabase){try{API=makeSupabaseAPI()}catch(e){console.error(e)}}
@@ -3119,6 +3163,7 @@ async function bootAuth(){
     API=makeLocalAPI();
     if(note){note.hidden=false;note.textContent=(SUPABASE_URL&&SUPABASE_ANON_KEY)?'The online service could not be loaded, so this is TEST MODE: accounts and alerts exist only in this browser.':'TEST MODE: no server is connected yet. Accounts and SOS alerts only exist in this browser (open a second tab with another account to try it). Nothing is sent to other devices.'}
   }
+  if(ct){await bootCardMode(ct);return}
   page('login');
   try{const u=await API.init();if(u)await onSignedIn(u);}catch(e){console.error(e)}
 }
@@ -3207,22 +3252,23 @@ function sosKick(){
   sosSync();clearInterval(sosSyncTimer);sosSyncTimer=setInterval(sosSync,SOS_SYNC_MS);
 }
 async function sosSync(){
-  if(sosBusy||!AUTH.user)return;sosBusy=true;
+  const viaCard=!AUTH.user&&!!CARD_TOKEN;
+  if(sosBusy||(!AUTH.user&&!CARD_TOKEN)||(state.sos.delivery&&state.sos.delivery.final))return;sosBusy=true;
   try{
-    if(sosPendingEnd){try{await API.endSos(sosPendingEnd);sosPendingEnd=null;state.sos.pendingEndId=null;saveState()}catch(e){}}
+    if(sosPendingEnd){try{await (viaCard?API.cardEndSos(CARD_TOKEN,sosPendingEnd):API.endSos(sosPendingEnd));sosPendingEnd=null;state.sos.pendingEndId=null;saveState();if(viaCard){CARD_TOKEN=null;try{sessionStorage.removeItem('safetrack_card_tok')}catch(e){}}}catch(e){}}
     if(state.sos.active){
       const l=state.sos.location&&state.sos.location.confirmed?state.sos.location:null;
       const body=l?{lat:l.lat,lon:l.lon,accuracy:l.accuracy,confirmed:true,source:sosLaunchSource}:{lat:null,lon:null,accuracy:null,confirmed:false,source:sosLaunchSource};
       if(!state.sos.alertId){
         state.sos.delivery={status:'sending'};renderState();
-        const r=await API.startSos(body);state.sos.alertId=r.id;state.sos.delivery={status:'sent',contacts:r.notified,at:Date.now()};sosDirty=false;saveState();
+        const r=await (viaCard?API.cardStartSos(CARD_TOKEN,body):API.startSos(body));state.sos.alertId=r.id;state.sos.delivery={status:'sent',contacts:r.notified,at:Date.now()};sosDirty=false;saveState();
       }else if(sosDirty&&l){
-        const stillThere=await API.updateSos(state.sos.alertId,body);sosDirty=false;
+        const stillThere=await (viaCard?API.cardUpdateSos(CARD_TOKEN,state.sos.alertId,body):API.updateSos(state.sos.alertId,body));sosDirty=false;
         if(!stillThere){state.sos.alertId=null;state.sos.delivery={status:'sending'}}   // alert expired/ended on the server: raise a fresh one next tick
       }
     }
   }catch(e){
-    if(state.sos.active&&!state.sos.alertId)state.sos.delivery={status:'failed',reason:shortErr(e)};
+    if(state.sos.active&&!state.sos.alertId)state.sos.delivery={status:'failed',reason:shortErr(e),final:/disabled|invalid card/i.test(String((e&&e.message)||e))};
     else if(state.sos.active&&state.sos.delivery)state.sos.delivery={...state.sos.delivery,updateFailed:true};
   }finally{
     sosBusy=false;renderState();renderSosPins();
@@ -3233,6 +3279,7 @@ function sosDeliveryLine(){
   const d=state.sos.delivery||{status:'sending'},n=Number.isFinite(d.contacts)?d.contacts:null,test=API&&API.mode==='local'?' (TEST MODE: only other accounts in this browser)':'';
   const noPin=(state.sos.location&&state.sos.location.confirmed)?'':' Your location is not confirmed yet, so no location or map marker is shared until GPS works.';
   const tail=' SafeTrack does not contact police or emergency services: call 911 yourself if you are in danger.';
+  if(d.status==='failed'&&d.final)return 'NOT SENT: this NFC card is disabled or not recognised. Call for help directly.'+tail;
   if(d.status==='failed')return 'NOT SENT: we could not reach the server ('+d.reason+'). Retrying automatically. Call someone you trust or emergency services directly.'+tail;
   if(d.status==='sending')return 'SOS active. Sending your alert to your trusted contacts…'+tail;
   const who=n==null?'your trusted contacts':(n>0?n+' trusted contact'+(n===1?'':'s'):'');

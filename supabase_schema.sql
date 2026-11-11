@@ -393,3 +393,85 @@ do $$ declare f text; begin
     execute format('grant execute on function %s to authenticated', f);
   end loop;
 end $$;
+
+
+-- ============================================================================
+-- v3: NFC card works WITHOUT logging in.
+-- The card's URL carries a long random secret (?card=...). Only its SHA-256 hash is stored.
+-- Whoever taps the card can start/update/end an SOS for the card OWNER and nothing else:
+-- they cannot read contacts, locations or the profile. A disabled card is refused here.
+-- The owner creates/rotates the secret while signed in (create_card_token); the old one stops working.
+-- ============================================================================
+alter table public.profiles add column if not exists card_hash text;
+create unique index if not exists profiles_card_hash_idx on public.profiles (card_hash) where card_hash is not null;
+
+drop function if exists public.get_my_profile();
+create or replace function public.get_my_profile()
+returns table (display_name text, email text, building text, floor text, unit text, details text, nfc_active boolean, is_admin boolean, has_card boolean)
+language sql security definer set search_path = public stable as $$
+  select p.display_name, p.email, p.building, p.floor, p.unit, p.details, p.nfc_active, p.is_admin, p.card_hash is not null
+  from public.profiles p where p.id = auth.uid();
+$$;
+
+create or replace function public.create_card_token() returns text
+language plpgsql security definer set search_path = public as $$
+declare t text := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  update public.profiles set card_hash = encode(sha256(convert_to(t, 'UTF8')), 'hex') where id = auth.uid();
+  return t;   -- shown to the owner once; only the hash is stored
+end $$;
+
+create or replace function public.card_status(p_token text) returns text
+language sql security definer set search_path = public stable as $$
+  select coalesce((select case when nfc_active then 'ok' else 'disabled' end from public.profiles
+                   where card_hash = encode(sha256(convert_to(coalesce(p_token,''), 'UTF8')), 'hex')), 'invalid');
+$$;
+
+create or replace function public.card_start_sos(p_token text, p_lat double precision, p_lon double precision, p_acc real, p_confirmed boolean)
+returns json language plpgsql security definer set search_path = public as $$
+declare pr public.profiles; new_id uuid; n int; recent public.sos_alerts;
+begin
+  select * into pr from public.profiles where card_hash = encode(sha256(convert_to(coalesce(p_token,''), 'UTF8')), 'hex');
+  if not found then raise exception 'invalid card'; end if;
+  if not pr.nfc_active then raise exception 'NFC card is disabled'; end if;
+  select count(*) into n from public.contacts c where c.status = 'accepted' and pr.id in (c.requester, c.addressee);
+  -- repeated taps within 15 s reuse the alert instead of creating duplicates
+  select * into recent from public.sos_alerts where user_id = pr.id and active and source = 'nfc' and started_at > now() - interval '15 seconds' limit 1;
+  if found then return json_build_object('id', recent.id, 'notified', n); end if;
+  update public.sos_alerts set active = false, ended_at = now() where user_id = pr.id and active;
+  insert into public.sos_alerts (user_id, lat, lon, accuracy, confirmed, building, floor, unit, details, source)
+  values (pr.id, p_lat, p_lon, p_acc, coalesce(p_confirmed, false), pr.building, pr.floor, pr.unit, pr.details, 'nfc')
+  returning id into new_id;
+  return json_build_object('id', new_id, 'notified', n);
+end $$;
+
+create or replace function public.card_update_sos(p_token text, p_id uuid, p_lat double precision, p_lon double precision, p_acc real, p_confirmed boolean)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  update public.sos_alerts a set lat = p_lat, lon = p_lon, accuracy = p_acc, confirmed = coalesce(p_confirmed, a.confirmed), updated_at = now()
+   from public.profiles p
+   where a.id = p_id and a.active and a.user_id = p.id
+     and p.card_hash = encode(sha256(convert_to(coalesce(p_token,''), 'UTF8')), 'hex');
+  return found;
+end $$;
+
+create or replace function public.card_end_sos(p_token text, p_id uuid) returns boolean
+language plpgsql security definer set search_path = public as $$
+begin
+  update public.sos_alerts a set active = false, ended_at = now(), updated_at = now()
+   from public.profiles p
+   where a.id = p_id and a.active and a.user_id = p.id
+     and p.card_hash = encode(sha256(convert_to(coalesce(p_token,''), 'UTF8')), 'hex');
+  return found;
+end $$;
+
+revoke all on function public.get_my_profile() from public, anon;
+grant execute on function public.get_my_profile() to authenticated;
+revoke all on function public.create_card_token() from public, anon;
+grant execute on function public.create_card_token() to authenticated;
+-- the card functions are intentionally callable without login (the secret token is the credential)
+grant execute on function public.card_status(text) to anon, authenticated;
+grant execute on function public.card_start_sos(text, double precision, double precision, real, boolean) to anon, authenticated;
+grant execute on function public.card_update_sos(text, uuid, double precision, double precision, real, boolean) to anon, authenticated;
+grant execute on function public.card_end_sos(text, uuid) to anon, authenticated;
