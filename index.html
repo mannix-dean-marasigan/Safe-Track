@@ -1010,6 +1010,13 @@ body.auth-required main,body.card-mode main{margin-left:0!important;padding-bott
 
 <section id="cardpage" class="page"><div style="padding-top:30px"><div class="card pad" style="max-width:560px;margin:0 auto;text-align:center"><div class="ring" style="margin:0 auto 12px">!</div><h2 style="font:700 22px 'Space Grotesk';margin:0 0 8px">SafeTrack emergency card</h2><p class="muted" id="cardInfo" role="status" style="line-height:1.6">Checking your card…</p><p id="cardSosText" role="status" style="line-height:1.6"></p><button class="btn danger full" id="cardEnd" hidden onclick="endSOS()">End SOS (I am safe)</button><p style="margin-top:18px"><a class="linkbtn" href="./">Sign in to SafeTrack</a></p></div></div></section>
 
+<section id="watchpage" class="page"><div style="padding-top:20px;max-width:640px;margin:0 auto"><div class="eyebrow">SafeTrack live viewer</div><h2 style="font:700 22px 'Space Grotesk';margin:4px 0 8px">Watching for an SOS</h2><p class="muted" id="watchConn" role="status">Connecting…</p><div class="card pad" id="watchAlert" aria-live="assertive"></div><div class="card" style="margin-top:12px;overflow:hidden"><div id="watchMap" style="height:320px"></div></div></div></section>
+
+<section id="setuppage" class="page"><div class="top"><div><div class="eyebrow">No account needed</div><div class="title">Set up your NFC card</div></div></div><div class="card pad"><p class="muted" style="line-height:1.6">Make two links: one for your NFC card, one for the person who should see your live location. This uses a free public relay instead of a database, so anyone who gets the viewer link can watch you during an SOS. Share it only with people you trust.</p>
+<div class="form-grid"><div class="field"><label for="su_name">YOUR NAME</label><input id="su_name" maxlength="40" autocomplete="name"></div><div class="field"><label for="su_b">BUILDING</label><input id="su_b" maxlength="80"></div><div class="field"><label for="su_f">FLOOR</label><input id="su_f" maxlength="10"></div><div class="field"><label for="su_u">ROOM / UNIT</label><input id="su_u" maxlength="20"></div></div>
+<button class="btn primary" type="button" onclick="relayMakeLinks(false)">Create links</button> <button class="btn" type="button" onclick="if(confirm('Make a NEW pairing code? Old links stop working.'))relayMakeLinks(true)">New pairing code</button> <button class="btn" type="button" onclick="page('login')">Back to sign in</button>
+<div id="setupOut" style="margin-top:14px"></div></div></section>
+
 <section id="feedback" class="page"><div class="top"><div><div class="eyebrow">We're listening</div><div class="title">Feedback &amp; Complaints</div></div></div>
 <div class="card pad"><div class="field"><label for="fbCategory">CATEGORY</label><select id="fbCategory"><option value="feedback">Feedback</option><option value="complaint">Complaint</option><option value="technical">Technical problem</option><option value="suggestion">Suggestion</option></select></div>
 <div class="field"><label for="fbMessage">WHAT HAPPENED?</label><textarea id="fbMessage" rows="5" maxlength="2000" placeholder="Describe your feedback, complaint or the problem you ran into"></textarea></div>
@@ -1025,7 +1032,8 @@ body.auth-required main,body.card-mode main{margin-left:0!important;padding-bott
 <div id="authError" class="auth-msg bad" role="alert" hidden></div>
 <button class="btn primary full" id="authSubmit" type="submit">Sign in</button>
 <div class="auth-switch"><span id="authSwitchText">New to SafeTrack?</span> <button type="button" class="linkbtn" id="authSwitchBtn" onclick="setAuthMode(authMode==='signin'?'signup':'signin')">Create account</button></div>
-<div class="note" id="authModeNote" hidden></div></form></div></div></section>
+<div class="note" id="authModeNote" hidden></div>
+<div class="auth-switch"><button type="button" class="linkbtn" onclick="page('setuppage')">Use without an account (NFC card + live viewer link)</button></div></form></div></div></section>
 </main>
 </div>
 
@@ -3153,6 +3161,12 @@ async function bootCardMode(token){
   document.getElementById('nfcConfirm').classList.add('show');clearTimeout(nfcConfirmTimer);nfcConfirmTimer=setTimeout(()=>nfcConfirmAnswer(false),10000);
 }
 async function bootAuth(){
+  const q=new URLSearchParams(location.search);
+  let relayCfg=null;
+  if(q.get('watch')){const c=q.get('watch');history.replaceState(null,'',location.pathname);bootWatch(c);return}
+  if(q.get('sos')){relayCfg={code:q.get('sos'),name:q.get('n')||'Someone',b:q.get('b')||'',f:q.get('f')||'',u:q.get('u')||''};history.replaceState(null,'',location.pathname);try{sessionStorage.setItem('safetrack_relay_cfg',JSON.stringify(relayCfg))}catch(e){}}
+  else{try{if(state.sos.active&&sessionStorage.getItem('safetrack_relay_cfg'))relayCfg=JSON.parse(sessionStorage.getItem('safetrack_relay_cfg'))}catch(e){}}
+  if(relayCfg){API=makeRelayAPI(relayCfg);MYPROFILE={...MYPROFILE,building:relayCfg.b,floor:relayCfg.f,unit:relayCfg.u};await bootCardMode(relayCfg.code);return}
   let ct=new URLSearchParams(location.search).get('card');
   if(ct){history.replaceState(null,'',location.pathname);try{sessionStorage.setItem('safetrack_card_tok',ct)}catch(e){}}
   else{try{if(state.sos.active)ct=sessionStorage.getItem('safetrack_card_tok')}catch(e){}}
@@ -3279,6 +3293,7 @@ function sosDeliveryLine(){
   const d=state.sos.delivery||{status:'sending'},n=Number.isFinite(d.contacts)?d.contacts:null,test=API&&API.mode==='local'?' (TEST MODE: only other accounts in this browser)':'';
   const noPin=(state.sos.location&&state.sos.location.confirmed)?'':' Your location is not confirmed yet, so no location or map marker is shared until GPS works.';
   const tail=' SafeTrack does not contact police or emergency services: call 911 yourself if you are in danger.';
+  if(API&&API.mode==='relay'&&d.status==='sent')return 'SOS active. Your live location is being sent to your paired viewer page (we cannot confirm anyone has it open). Use CALL NOW and SHARE MY LOCATION so someone is told right now.'+noPin+tail;
   if(d.status==='failed'&&d.final)return 'NOT SENT: this NFC card is disabled or not recognised. Call for help directly.'+tail;
   if(d.status==='failed')return 'NOT SENT: we could not reach the server ('+d.reason+'). Retrying automatically. Call someone you trust or emergency services directly.'+tail;
   if(d.status==='sending')return 'SOS active. Sending your alert to your trusted contacts…'+tail;
@@ -3291,6 +3306,7 @@ function sosTimelineText(){
   const d=state.sos.delivery||{};
   if(d.status==='failed')return 'FAILED: not sent, retrying';
   if(d.status==='sending')return 'Sending…';
+  if(API&&API.mode==='relay')return 'Live location sent to paired viewer';
   return d.contacts===0?'Nobody to alert: add contacts':(Number.isFinite(d.contacts)?'Sent to '+d.contacts+' contact'+(d.contacts===1?'':'s'):'Sent');
 }
 
@@ -3442,6 +3458,75 @@ async function setFbStatus(id,s){try{await API.setFeedbackStatus(id,s);toast('St
 function openTerms(){document.getElementById('termsDialog').classList.add('show')}
 function closeTerms(){document.getElementById('termsDialog').classList.remove('show')}
 
+/* ---------- NO-ACCOUNT MODE (no database): card tap -> SOS -> live location to a paired viewer page ----------
+   Uses the free public relay ntfy.sh as a pipe (a secret random channel name is the only "password").
+   Anyone who learns the channel name can watch the location, and the relay limits messages (so updates go out about every 15 s). */
+const RELAY_BASE='https://ntfy.sh/';
+function makeRelayAPI(cfg){
+  const url=RELAY_BASE+encodeURIComponent(cfg.code);let last=0;
+  const pub=async o=>{const r=await fetch(url,{method:'POST',body:JSON.stringify({v:1,name:cfg.name,b:cfg.b,f:cfg.f,u:cfg.u,at:Date.now(),...o})});if(!r.ok)throw new Error('relay '+r.status)};
+  return {mode:'relay',
+    async cardStatus(){return 'ok'},
+    async cardStartSos(t,p){const id=(crypto.randomUUID?crypto.randomUUID():String(Date.now()));await pub({t:'start',id,lat:p.lat,lon:p.lon,acc:p.accuracy,conf:!!p.confirmed});last=Date.now();return {id,notified:null}},
+    async cardUpdateSos(t,id,p){if(Date.now()-last<15000)return true;await pub({t:'upd',id,lat:p.lat,lon:p.lon,acc:p.accuracy,conf:!!p.confirmed});last=Date.now();return true},
+    async cardEndSos(t,id){await pub({t:'end',id});return true}};
+}
+function bootWatch(code){
+  document.body.classList.remove('auth-required');document.body.classList.add('card-mode');page('watchpage');
+  let cur=null,ended=null,map=null,marker=null;
+  const conn=document.getElementById('watchConn'),box=document.getElementById('watchAlert');
+  const fmt=ts=>new Date(ts).toLocaleTimeString();
+  const age=ts=>{const s=Math.max(0,Math.round((Date.now()-ts)/1000));return s<60?s+' s ago':Math.round(s/60)+' min ago'};
+  function draw(){
+    box.textContent='';
+    if(!cur){box.textContent=ended?'The last SOS ended at '+fmt(ended)+'.':'No active SOS. This page updates by itself.';box.className='muted';return}
+    box.className='watch-active';
+    const h=document.createElement('h3');h.textContent=cur.name+' needs help';box.appendChild(h);
+    const d=locationDetailsText({building:cur.b,floor:cur.f,unit:cur.u});if(d){const p=document.createElement('p');p.textContent=d;box.appendChild(p)}
+    const has=Number.isFinite(cur.lat)&&Number.isFinite(cur.lon);
+    const p2=document.createElement('p');p2.textContent=(has?'Live location'+(Number.isFinite(cur.acc)?' (±'+Math.round(cur.acc)+' m)':'')+(cur.conf===false?' — not GPS-confirmed':''):'Location not available yet — try calling them.')+' · started '+fmt(cur.start)+' · updated '+age(cur.at)+(Date.now()-cur.at>120000?' — no recent update, they may be offline':'');box.appendChild(p2);
+    if(has){const a=document.createElement('a');a.className='btn primary';a.target='_blank';a.rel='noopener';a.href='https://www.google.com/maps?q='+encodeURIComponent(cur.lat+','+cur.lon);a.textContent='Open in Google Maps';box.appendChild(a)}
+  }
+  function pin(){
+    if(!cur||!Number.isFinite(cur.lat))return;
+    if(!map){map=L.map('watchMap').setView([cur.lat,cur.lon],17);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);marker=L.circleMarker([cur.lat,cur.lon],{radius:9,color:'#fff',weight:2,fillColor:'#ff3b5c',fillOpacity:1}).addTo(map)}
+    else{marker.setLatLng([cur.lat,cur.lon]);map.panTo([cur.lat,cur.lon])}
+    setTimeout(()=>map.invalidateSize(),50);
+  }
+  function handle(m){
+    if(m.t==='end'){if(cur&&cur.id===m.id){cur=null;ended=m.at}}
+    else if(m.t==='start'||m.t==='upd'){
+      const fresh=!cur||cur.id!==m.id;
+      cur={id:m.id,name:m.name||'Someone',b:m.b,f:m.f,u:m.u,lat:m.lat,lon:m.lon,acc:m.acc,conf:m.conf,at:m.at,start:fresh?m.at:cur.start};ended=null;
+      if(fresh&&Date.now()-m.at<60000){try{navigator.vibrate&&navigator.vibrate([300,150,300,150,600])}catch(e){}try{if('Notification' in window&&Notification.permission==='granted'&&document.hidden)new Notification('SafeTrack SOS',{body:cur.name+' needs help.'})}catch(e){}}
+    }else return;
+    draw();pin();
+  }
+  try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission()}catch(e){}
+  draw();
+  const es=new EventSource(RELAY_BASE+encodeURIComponent(code)+'/sse?since=30m');
+  es.onopen=()=>{conn.textContent='Connected: listening for an SOS.'};
+  es.onerror=()=>{conn.textContent='Connection lost. Retrying… (if this stays, check your internet)'};
+  es.onmessage=ev=>{let m;try{m=JSON.parse(JSON.parse(ev.data).message)}catch(e){return}if(m&&m.v===1)handle(m)};
+  setInterval(draw,5000);
+}
+const RELAY_SETUP_KEY='safetrack_relay_setup';
+function relaySetupLoad(){try{return JSON.parse(localStorage.getItem(RELAY_SETUP_KEY))||{}}catch(e){return {}}}
+function relayNewCode(){const a=new Uint8Array(12);crypto.getRandomValues(a);return 'st'+[...a].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function relayMakeLinks(newCode){
+  const g=id=>document.getElementById(id).value.trim();
+  const s=relaySetupLoad();const cfg={code:(newCode||!s.code)?relayNewCode():s.code,name:g('su_name')||'Someone',b:g('su_b'),f:g('su_f'),u:g('su_u')};
+  try{localStorage.setItem(RELAY_SETUP_KEY,JSON.stringify(cfg))}catch(e){}
+  const base=location.origin+location.pathname,qs=(k,v)=>v?'&'+k+'='+encodeURIComponent(v):'';
+  const card=base+'?sos='+cfg.code+qs('n',cfg.name)+qs('b',cfg.b)+qs('f',cfg.f)+qs('u',cfg.u),viewer=base+'?watch='+cfg.code;
+  const out=document.getElementById('setupOut');out.textContent='';
+  const row=(label,url,note)=>{const w=document.createElement('div');w.className='field';const l=document.createElement('label');l.textContent=label;const i=document.createElement('input');i.readOnly=true;i.value=url;const b=document.createElement('button');b.className='btn';b.type='button';b.textContent='Copy';b.onclick=async()=>{try{await navigator.clipboard.writeText(url);toast('Copied')}catch(e){i.select();toast('Select and copy')}};const n=document.createElement('p');n.className='muted';n.style.fontSize='11px';n.textContent=note;w.append(l,i,b,n);out.appendChild(w)};
+  row('1. LINK FOR YOUR NFC CARD (write this to the card)',card,'Tapping the card opens this link and starts the SOS flow on your phone. No login.');
+  row('2. LINK FOR THE PERSON WATCHING (send it to them once)',viewer,'They open it and see your live location when you start an SOS.');
+  toast('Links ready.');
+}
+function relaySetupInit(){const s=relaySetupLoad();['name','b','f','u'].forEach(k=>{const el=document.getElementById('su_'+k);if(el&&s[k])el.value=s[k]})}
+
 function resetLocalDemo(){try{localStorage.removeItem(STORAGE_KEY)}catch(e){}location.reload()}
 // Permission revoked (or re-granted) while the page is open: reflect it immediately instead of waiting for the next GPS error.
 try{if(navigator.permissions&&navigator.permissions.query)navigator.permissions.query({name:'geolocation'}).then(p=>{
@@ -3450,7 +3535,7 @@ try{if(navigator.permissions&&navigator.permissions.query)navigator.permissions.
     else if(p.state==='granted'&&gps.status==='denied'){setGps('idle');renderSafeWalk()}
   };
 }).catch(()=>{})}catch(e){}
-renderState();initMaps();window.addEventListener('resize',()=>Object.values(maps).forEach(m=>m.invalidateSize()));window.addEventListener('beforeunload',()=>{if(watchId!==null)navigator.geolocation.clearWatch(watchId)});
+relaySetupInit();renderState();initMaps();window.addEventListener('resize',()=>Object.values(maps).forEach(m=>m.invalidateSize()));window.addEventListener('beforeunload',()=>{if(watchId!==null)navigator.geolocation.clearWatch(watchId)});
 // If an SOS was genuinely active when the page was closed/reloaded, resume GPS tracking
 // (location.live was not restored, so nothing is watching until we start it here).
 if(state.sos.active){toast('SOS is still active — resuming GPS tracking');startWatching('sos')}
